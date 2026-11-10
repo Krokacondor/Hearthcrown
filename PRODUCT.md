@@ -41,7 +41,7 @@ A management game where the ruler is a person on the map, not a cursor: the prin
 - **Back** goes up one level: Esc, right-click, or an on-screen Back button (plus the phone's back gesture). With nothing open it does nothing.
 - Nothing is hover-only. Panels slide in from the side so the map stays visible.
 - Terminology: classes are **Styles**; adventurers start as **Novice**; adventurers never die. Gold never goes below zero.
-- Art is drawn in code (simple shapes) for v1; a CC0 tileset may replace it later behind a sprite interface.
+- Art is a flat, hand-drawn chibi cartoon drawn in code for v1: thick dark outlines (#3b2a2e), flat fills, a slight wobble filter. Reference: `docs/art/princess-reference.png` (option B). All art is referenced by stable IDs so human-made art packs can replace it later (`PLAN.md` 2.1).
 - All names, characters, text and art are original. Nothing may be taken from existing games, including the games that inspired it.
 
 ## Brand Commitments

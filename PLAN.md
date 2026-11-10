@@ -112,6 +112,7 @@ One in-game day ≈ 6 real minutes at 1× (pause, 1×, 2×, 4×).
 - A walkable character on the map (click to move along roads, or arrow keys).
 - During the day she can: talk to anyone with an icon over their head, start construction or upgrades, enter buildings (Audience Hall, Gambling Hall, Library...), and use items on adventurers who are still in town.
 - Walking takes in-game time, so a compact city leaves her more time.
+- **Face to face.** People are only dealt with in person. Talking to an adventurer or citizen, booking a Royal Garden appointment (done at the garden), and using items on an adventurer all require walking to them. Panels such as Adventurers only show information; they never offer "talk" or "book" buttons. The Build menu and Decrees are the menus that act directly.
 - **She is immortal.** Everyone else ages, retires and is succeeded by the next generation; she never ages. She is a guardian who wakes when the realm needs her (see 4.3).
 - **Wardrobe.** She unlocks outfits over the game (story, masters, rare finds, research), each with a perk, e.g. Riding Habit (walks faster), Court Gown (friendlier petitioners), Traveling Cloak (talking fills the morale gauge faster). She changes at the castle. Outfits are art layers (2.1). Details in M16.
 
@@ -376,7 +377,7 @@ After the ending, the player can start New Game+: a long age has passed, the cit
 
 - **Map view** (canvas) with pan and zoom. The princess walks on it. Select a lot to build. Inspect a person (hover, tap, or keyboard) to see name, race, style, mood and known traits.
 - **Top bar**: day, chapter, clock, speed, gold, Emberstone, population, morale gauge, reputation.
-- **Panels**: Build, Decrees, Adventurers (stats, traits, bond web), Guilds, Research, World Map, Inventory (style items and gifts), Story log, Promises.
+- **Panels**: Build, Decrees, Adventurers (stats, traits, bond web; view only, see 4.2 "Face to face"), Guilds, Research, World Map, Inventory (style items and gifts), Story log, Promises.
 - **Dialogs**: morning event, story scenes, audience petitions, conversations, style requests, guild petitions, retirement.
 - **Night report**: party results, bond changes, style changes, discoveries, unlocks.
 - **Overlays**: rest-spot radius, walking routes, bond lines.
