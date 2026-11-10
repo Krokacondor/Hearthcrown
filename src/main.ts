@@ -10,6 +10,7 @@ import { viewSize } from "./render/viewSize";
 import { createGame } from "./sim/game";
 import { cameraActionForKey, type CameraAction } from "./ui/keys";
 import { renderTopBar } from "./ui/topbar";
+import { pinchSteps, wheelSteps } from "./ui/zoomInput";
 
 const byId = (id: string): HTMLElement => {
   const el = document.getElementById(id);
@@ -51,10 +52,44 @@ if (!view) {
       apply(action);
     }
   });
+  const zoomSteps = (steps: number): void => {
+    for (let i = 0; i < Math.abs(steps); i++) apply({ kind: "zoom", dir: steps < 0 ? -1 : 1 });
+  };
+
+  let wheelCarry = 0;
   map.addEventListener("wheel", (e) => {
     e.preventDefault();
-    if (e.deltaY !== 0) apply({ kind: "zoom", dir: e.deltaY < 0 ? -1 : 1 });
+    const r = wheelSteps(wheelCarry, e.deltaY, e.deltaMode);
+    wheelCarry = r.carry;
+    zoomSteps(r.steps);
   }, { passive: false });
+
+  // Two-finger pinch on phones (the browser's own pinch is off: touch-action none).
+  const pointers = new Map<number, { x: number; y: number }>();
+  let pinch: { start: number; applied: number } | null = null;
+  const fingerDistance = (): number => {
+    const [a, b] = [...pointers.values()];
+    return a && b ? Math.hypot(a.x - b.x, a.y - b.y) : 0;
+  };
+  map.addEventListener("pointerdown", (e) => {
+    if (e.pointerType !== "touch") return;
+    pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (pointers.size === 2) pinch = { start: fingerDistance(), applied: 0 };
+  });
+  map.addEventListener("pointermove", (e) => {
+    if (!pointers.has(e.pointerId)) return;
+    pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (!pinch || pointers.size !== 2) return;
+    const target = pinchSteps(pinch.start, fingerDistance());
+    zoomSteps(target - pinch.applied);
+    pinch.applied = target;
+  });
+  const endPointer = (e: PointerEvent): void => {
+    pointers.delete(e.pointerId);
+    if (pointers.size < 2) pinch = null;
+  };
+  map.addEventListener("pointerup", endPointer);
+  map.addEventListener("pointercancel", endPointer);
   for (const button of document.querySelectorAll<HTMLButtonElement>("[data-turn]")) {
     button.addEventListener("click", () => apply({ kind: "turn", dir: button.dataset.turn === "left" ? -1 : 1 }));
   }

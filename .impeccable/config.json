@@ -1,0 +1,44 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "design-system-font",
+        "value": "*",
+        "files": [
+          ".impeccable/mocks/decision/assigned.html"
+        ],
+        "createdAt": "2026-11-10T22:36:44.492Z",
+        "reason": "Claude: spent decision-round sketch showing an alternate direction's fonts; not shipped UI"
+      },
+      {
+        "rule": "design-system-font",
+        "value": "*",
+        "files": [
+          ".impeccable/mocks/decision/model-pick.html"
+        ],
+        "createdAt": "2026-11-10T22:36:44.737Z",
+        "reason": "Claude: spent decision-round sketch showing an alternate direction's fonts; not shipped UI"
+      },
+      {
+        "rule": "design-system-font",
+        "value": "*",
+        "files": [
+          ".impeccable/mocks/decision/challenger-catalog.html"
+        ],
+        "createdAt": "2026-11-10T22:36:44.992Z",
+        "reason": "Claude: spent decision-round sketch showing an alternate direction's fonts; not shipped UI"
+      },
+      {
+        "rule": "design-system-font",
+        "value": "*",
+        "files": [
+          ".impeccable/mocks/decision/canon.html"
+        ],
+        "createdAt": "2026-11-10T22:36:45.244Z",
+        "reason": "Claude: spent decision-round sketch showing an alternate direction's fonts; not shipped UI"
+      }
+    ]
+  }
+}
