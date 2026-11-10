@@ -1,0 +1,24 @@
+import { describe, expect, it } from "vitest";
+import { createDebugHook, installDebugHook, type DebugHook } from "../src/debug";
+import { createGame } from "../src/sim/game";
+
+describe("debug hook", () => {
+  it("getState returns the game's snapshot", () => {
+    const game = createGame(7);
+    expect(createDebugHook(game).getState()).toEqual(game.snapshot());
+  });
+
+  it("cmd forwards to game.command and returns its result", () => {
+    const game = createGame(7);
+    const hook = createDebugHook(game);
+    expect(hook.cmd("setSeed", { seed: 42 })).toEqual({ ok: true });
+    expect(hook.getState().seed).toBe(42);
+    expect(hook.cmd("nope").ok).toBe(false);
+  });
+
+  it("installDebugHook sets __hearthcrown on the target", () => {
+    const target: { __hearthcrown?: DebugHook } = {};
+    installDebugHook(target, createGame(7));
+    expect(target.__hearthcrown?.getState().seed).toBe(7);
+  });
+});
