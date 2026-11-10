@@ -76,7 +76,7 @@ Rules: `sim/` never imports `render/` or `ui/`. The UI only calls sim commands. 
 
 One `effects.ts` runner applies them, so new content never needs new code.
 
-**Gold effects never go below zero.** Each gold cost in content is marked one of two ways:
+**Gold and Emberstone effects never go below zero.** Each gold or Emberstone cost in content is marked one of two ways:
 - `"mode": "require"`: the choice is greyed out if the princess can't afford it (e.g. funding a citizen's new business).
 - `"mode": "takeWhatYouCan"`: the princess loses the amount or everything she has, whichever is less (e.g. a theft event).
 
@@ -100,6 +100,8 @@ All numbers are starting values in `data/balance.json`.
 ### 4.1 Time & the daily loop
 One in-game day ≈ 6 real minutes at 1× (pause, 1×, 2×, 4×).
 
+**Game length:** the main story targets **200–300 in-game days** (about 20–30 hours at 1×). Difficulty, New Game+ and tuning can shift it; the dials live in `balance.json`.
+
 1. **Morning event** (06:00): a short scene with a choice (4.10). Time is paused.
 2. **Preparation**: adventurers rest, shop, meet at the Lodge, and sign up for decrees. The princess answers sign-ups.
 3. **Day**: parties leave town. The princess walks the city, talks to people, builds and upgrades, holds audiences, and visits buildings like the Gambling Hall.
@@ -110,12 +112,20 @@ One in-game day ≈ 6 real minutes at 1× (pause, 1×, 2×, 4×).
 - A walkable character on the map (click to move along roads, or arrow keys).
 - During the day she can: talk to anyone with an icon over their head, start construction or upgrades, enter buildings (Audience Hall, Gambling Hall, Library...), and use items on adventurers who are still in town.
 - Walking takes in-game time, so a compact city leaves her more time.
+- **She is immortal.** Everyone else ages, retires and is succeeded by the next generation; she never ages. She is a guardian who wakes when the realm needs her (see 4.3).
+- **Wardrobe.** She unlocks outfits over the game (story, masters, rare finds, research), each with a perk, e.g. Riding Habit (walks faster), Court Gown (friendlier petitioners), Traveling Cloak (talking fills the morale gauge faster). She changes at the castle. Outfits are art layers (2.1). Details in M16.
 
 ### 4.3 Story
 - Told in **chapters** (`data/story.json`). Each chapter has a goal (e.g. "Clear the Mirewood", "Reach 40 citizens"), scenes and rewards.
 - Scenes use a dialogue box with portraits and choices, through the effects system.
 - Chapter goals unlock dungeons, buildings, races, styles and masters. The final chapter ends the game and shows the score.
-- Recurring cast: the princess, her advisor, a rival noble, a mysterious traveler. All original.
+- Recurring cast: the princess, her advisor (her right-hand aide), a rival noble, a mysterious traveler. All original.
+- **The villain** is data: a set of story beats with swappable faces (name, look, dialogue). Same goals each time; each New Game+ deals a different face. The advisor may find the new one suspiciously familiar.
+
+**Ending and post-game**
+- The finale is the **adventurers** saving the realm; the princess never fights. Her purpose fulfilled, she **turns to stone** (a statue in the town she built). Ending scene → score screen (4.20) → credits.
+- **Continuing the save:** about a day later evil stirs and she breaks out of the stone at once. Comedic beat; the advisor says something like *"Evil has risen once more! ...It's been a day, Your Highness."* Nothing else has changed: same town, adventurers, bonds. Play continues into post-game content (extra chapters, harder dungeons, new masters or Styles).
+- **New Game+** is the long sleep: a long age has passed, the city is gone, and she rebuilds from the field. See 4.22.
 
 ### 4.4 Stats
 | Stat | Effect |
@@ -197,7 +207,9 @@ More styles can be added in data, including **rare styles** (4.6.3).
 - Homes produce **apprentices**. The princess **recruits** them. The adventurer cap grows with Lodge upgrades (start 4, max 16).
 - Each has: race, style, level, the nine stats, motivation (0–100), gold, gear, traits, bonds, and age.
 - **Adventurers cannot die.** If a whole party is defeated, they return to town injured and need time to recover.
-- **Retirement**: after many seasons, an adventurer starts thinking about retiring. Events and items can delay it. When they retire, they leave a parting gift and their home can produce a new apprentice.
+- **Storybook aging** (working assumption, tuned in M19): aging runs much faster than the calendar so generations fit in a 200–300 day game. Starting points: adventurers think about retiring after ~120–180 days of service; a newborn reaches apprentice age in ~60–80 days.
+- **Retirement**: after long service, an adventurer starts thinking about retiring. Events and items can delay it. When they retire, they leave a parting gift and their home can produce a new apprentice.
+- **Settling down**: a special retirement event where a **married couple** retires together and has a child. The family lives in town; the child grows up as a citizen (look rolled from both parents, 4.21) and can become an apprentice.
 - **Daily routine (state machine):**
   1. If motivation ≤ 30 → rest at home today.
   2. If a rest building (Fountain, Bathhouse, Garden) is within **50 units** of home → rest there (+10 to +19 motivation).
@@ -220,6 +232,8 @@ More styles can be added in data, including **rare styles** (4.6.3).
   - Gains: runs together, successful clears, covering each other in a fight, shared events, matching traits.
   - Losses: failed runs, injuries blamed on someone, clashing traits, rivalry events.
   - Tiers: Strangers → Acquainted → Friends → Close → Sworn. Higher tiers give bonuses when fighting together.
+- **Princess bonds**: each adventurer also has a bond score with the princess. Royal Garden appointments raise it; Feared commands (4.19) lower it.
+- **Relationships**: adventurers can be **dating** and later **married**, shown plainly in profiles, the bond web and the night report. Dates at the Royal Garden move a couple along. Couples get a bonus in the same party. Married couples may later settle down (4.9). Thresholds and how marriage happens (e.g. a petition for the princess's blessing) are decided in M11.
 - **Party forming**: each morning at the Lodge, adventurers group up by bond strength + role balance (tank, healer, damage) + decree interest.
 - **Permanent guilds**: a group that runs together often with high bonds may decide on its own to become a guild. They bring a **petition** to the princess, who approves or declines. Guilds get a name, a banner color and perks. Declining can hurt bonds or motivation.
 
@@ -239,6 +253,9 @@ More styles can be added in data, including **rare styles** (4.6.3).
 
 ### 4.14 Buildings
 Each building has a size, cost, unlock, max count and upgrade levels in `data/buildings.json`. Daily caps: 10 builds, 5 demolitions.
+
+- **Buildings and upgrades cost Emberstone** (4.18). A few special buildings also cost gold on top (e.g. the Gambling Hall).
+- **Demolish** unlocks early in a first playthrough (chapter 1). New Game+ has it from day one.
 
 **Homes**: Cottage (1×1, 1 citizen), Family Home (2×1, 3 citizens), Manor (2×2, 6 citizens), and one race home per race (1×1).
 
@@ -271,7 +288,8 @@ Each building has a size, cost, unlock, max count and upgrade levels in `data/bu
 |---|---|
 | Audience Hall | Petitioners come to the princess (4.15) |
 | Gambling Hall | Mini-games for the princess (High-Low, dice, wheel) with a daily bet limit. Also pays taxes every night, more when citizens are happy. Adventurers with the *Gambler* trait visit too. |
-| Royal Garden | A quiet walk once a day restores the princess's spirit (a morale bonus) |
+| Royal Garden | Where bonds grow. **Appointments:** the princess pays a small gold fee (`require`) to book one specific adventurer for the next day; that adventurer **stays in town** that day and their bond with her grows. **Meetups:** 2–4 adventurers who get along arrange a day there on their own (they skip adventuring), growing bonds with each other. **Dates:** two adventurers with a strong bond go on dates there (4.11). Traits shape visits (*Charming* bonds faster, *Loner* prefers one-on-one, clashing traits can bicker). Upgrades may add guest capacity or spots with small bonuses. |
+| Makeover building (optional, name TBD) | Late unlock. For a **large** fee the princess changes a person's look slot by slot (4.21). Who can be changed, and whether people get a say, is still open. |
 
 ### 4.15 Audience Hall (petitions)
 Inspired by quick yes-or-no court games.
@@ -295,7 +313,9 @@ Inspired by quick yes-or-no court games.
 - Total research levels count toward the end score.
 
 ### 4.18 Treasury and population
-- **Treasury** is just the princess's spending money. Upkeep of the city is assumed to be covered. Gold never drops below zero and there is no debt (see the effects rules in section 2). Being broke only means she can't build, fund research, or say yes to costly petitions.
+- **Treasury** is just the princess's spending money. Upkeep of the city is assumed to be covered. Gold never drops below zero and there is no debt (see the effects rules in section 2). Being broke only means she can't fund research, pay for appointments, or say yes to costly petitions.
+- **Emberstone** is the building material: glowing stones that rebuild the kingdom from its embers. Buildings and upgrades cost Emberstone. It comes from dungeon clears and decrees (other sources may be added through effects). Like gold, it never drops below zero.
+- **Gold** pays for research, shop funding, petitions, Royal Garden appointments, makeovers, and the gold part of a few special buildings.
 - **Population** is not a meter. When a home is built, named citizens move in (with names, a household, and sometimes an apprentice). Population is simply the count of residents.
 
 ### 4.19 Reputation: Loved ↔ Feared
@@ -342,12 +362,20 @@ Every citizen and adventurer gets a look rolled **once, at creation**, with the 
 - **Households look related:** citizens in one household share a skin tone and lean toward the same hair color.
 - **The princess** is hand-designed, not rolled.
 
+### 4.22 New Game+
+After the ending, the player can start New Game+: a long age has passed, the city is gone, and the princess rebuilds from the field. A new villain face (4.3). Carries over:
+1. **More starting Emberstone.**
+2. **Some princess buildings** available from the start (which ones decided in M20).
+3. **Demolish** available from day one.
+4. **Two reincarnated adventurers** (the player picks which two at the end of the previous run): a cutscene with déjà vu comments ("Have we... met?") despite never having met her, plus **two free houses**. They keep their **previous Style** (not Novice), start at a lower level than before, and get bonus stats leaning toward what they were best at. They keep their look and name.
+5. **One Style building of the player's choice** open from the start.
+
 ---
 
 ## 5. UI
 
 - **Map view** (canvas) with pan and zoom. The princess walks on it. Select a lot to build. Inspect a person (hover, tap, or keyboard) to see name, race, style, mood and known traits.
-- **Top bar**: day, chapter, clock, speed, gold, population, morale gauge, reputation.
+- **Top bar**: day, chapter, clock, speed, gold, Emberstone, population, morale gauge, reputation.
 - **Panels**: Build, Decrees, Adventurers (stats, traits, bond web), Guilds, Research, World Map, Inventory (style items and gifts), Story log, Promises.
 - **Dialogs**: morning event, story scenes, audience petitions, conversations, style requests, guild petitions, retirement.
 - **Night report**: party results, bond changes, style changes, discoveries, unlocks.
@@ -392,22 +420,23 @@ Build in this order. Each milestone ends with the game running in the browser, t
 | M1 | Map & placement | Map JSON loads. Lots and roads draw. Placement follows the rules (tested). Art registry and packs with fallback (2.1) draw tiles and buildings. |
 | M2 | Paths, walkers, princess | Dijkstra tested. People walk on roads. The princess can be moved around. Simple map editor. Character part frames, art gallery page, `ART-GUIDE.md` and templates (2.1). |
 | M3 | Day loop | Clock, phases, speeds, night report. Citizens go out and come home. |
-| M4 | Economy & buildings | Gold, costs, tax, build and demolish caps, upgrades, data-driven building list. |
+| M4 | Economy & buildings | Gold and Emberstone, costs, tax, build and demolish caps, demolish unlock, upgrades, data-driven building list. |
 | M5 | Effects system | `effects.ts` runner with tests. Used by everything after this. |
 | M6 | Stats, races, adventurers | Nine stats, race stat leans, apprentices, recruiting, Novice, motivation, daily routine, rest rule, shop priority, buying. Rolled character looks (4.21) for citizens and adventurers. |
 | M7 | Dungeons & combat | World map with neighbor unlocks, stat-based room fights, retreat and defeat, logs, rewards. |
 | M8 | Lodge & decrees | Lodge, party forming by role balance, decree board, sign-up bubbles, approve / Gain XP / Rest, 14:00 rule. |
 | M9 | Styles | All v1 styles with pros, cons and growth. Style request events, style items (end the adventurer's day), rare dungeon styles. |
 | M10 | Traits | Trait data, discovery, effects on shopping, breaks, gear, abilities, growth, bonds and style requests. |
-| M11 | Bonds & guilds | Bond scores and tiers, bond-based parties, guild petitions. |
+| M11 | Bonds & guilds | Bond scores and tiers, princess bonds, dating and marriage, bond-based parties, guild petitions. |
 | M12 | Morning events | Conditional event deck, choices, multi-day chains. |
 | M13 | Audience Hall & reputation | Petitions, yes/no, promises with deadlines, follow-ups, Loved/Feared slider, Loved perks, Feared command options. |
 | M14 | Talking & morale | Talk icons, conversations, morale gauge. |
 | M15 | Story & masters | Chapters, scenes, unlocks, masters stationed at buildings. |
-| M16 | Princess buildings & town | Gambling Hall mini-games and taxes, Royal Garden, remaining buildings. |
-| M17 | Research, retirement, score | Research lines, retirement and delays, ending, score screen. |
+| M16 | Princess buildings & town | Gambling Hall mini-games and taxes, Royal Garden (appointments, meetups, dates), princess wardrobe, makeover building, remaining buildings. |
+| M17 | Research, aging, ending | Research lines, storybook aging, retirement and delays, settling down and children, ending (statue), score screen, continuing after the ending. |
 | M18 | Save/load & polish | Versioned saves, overlays, tooltips, settings. Installable web app (5.2). |
-| M19 | Balance pass | Headless sim runs 100 days with a scripted player and prints gold, levels, bonds, styles and clears. Tune JSON. |
+| M19 | Balance pass | Headless sim runs 300 days with a scripted player and prints gold, Emberstone, levels, bonds, styles, clears, retirements and births. Tune JSON so the story lands in 200–300 days. |
+| M20 | New Game+ & post-game | New Game+ carryovers (4.22), villain faces, reincarnation cutscene, post-game content hooks. |
 
 ---
 
