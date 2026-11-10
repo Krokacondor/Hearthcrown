@@ -36,6 +36,15 @@ describe("src/sim stays pure", () => {
     }
   });
 
+  it.each(files)("$name does not import three", ({ source }) => {
+    const imports = [
+      ...source.matchAll(/(?:\bfrom|\bimport)\s*\(?\s*["']([^"']+)["']/g),
+    ].map((m) => m[1]);
+    for (const path of imports) {
+      expect(path).not.toMatch(/^three(\/|$)/);
+    }
+  });
+
   it.each(files)("$name does not touch the DOM or browser storage", ({ source }) => {
     expect(source).not.toMatch(/\b(document|window)\.|\blocalStorage\b/);
   });

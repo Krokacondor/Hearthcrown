@@ -2,5 +2,19 @@
   "startingGold": 100,
   "startingDay": 1,
   "startingTime": 360,
-  "startingReputation": 0
+  "startingReputation": 0,
+  "map": {
+    "widthTiles": 40,
+    "depthTiles": 32
+  },
+  "camera": {
+    "fov": 24,
+    "height": 10,
+    "distance": 11,
+    "lookHeight": 0.8,
+    "startZoom": 2,
+    "minZoom": 0.9,
+    "maxZoom": 3.4,
+    "zoomStep": 0.15
+  }
 }
