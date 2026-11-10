@@ -1,6 +1,6 @@
 # Working rules for this project
 
-You are building **Hearthcrown**, a top-down 2D browser kingdom-management game where the player is a princess rebuilding her capital. The full design is in `PLAN.md`. Read it before starting any work.
+You are building **Hearthcrown**, a browser kingdom-management game set in a 3D papercraft diorama (PLAN.md 2.2) where the player is a princess rebuilding her capital. The full design is in `PLAN.md`. Read it before starting any work.
 
 ## One-time setup (the human runs these)
 ```bash
@@ -29,7 +29,7 @@ Restart Claude Code after installing. If any of these are missing when you start
 - Keep commits small, one per logical step, with clear messages.
 
 ## UI and visual design (Impeccable)
-- Once, in M0: run `/impeccable init` to create `PRODUCT.md` and `DESIGN.md` from `PLAN.md`. The look: a warm, readable storybook-kingdom feel with simple shapes. Every UI panel and the canvas palette follow `DESIGN.md`.
+- Once, in M0: run `/impeccable init` to create `PRODUCT.md` and `DESIGN.md` from `PLAN.md`. The look: a warm, readable storybook-kingdom feel with simple shapes. Every UI panel and the world palette follow `DESIGN.md`.
 - Before building any new panel or dialog: `/impeccable shape`.
 - After each milestone that adds UI: `/impeccable critique`, then `/impeccable audit` (accessibility, responsiveness), then `/impeccable polish`.
 - Use `/impeccable clarify` on UI text, such as event and petition wording and button labels.
@@ -49,7 +49,7 @@ At the end of every milestone, with `npm run dev` running:
 
 ## Code rules
 - TypeScript, strict mode. Vite for dev and build. Vitest for tests.
-- Rendering is plain Canvas 2D. Don't add a game engine or UI framework without asking.
+- The world renders with Three.js (approved 2026-11-10; see PLAN.md 2.2). Don't add a game engine, physics library or UI framework without asking.
 - `src/sim/` is pure logic: no DOM, no `Math.random()`. Use the seeded RNG in `sim/rng.ts`.
 - `render/` and `ui/` read sim state and call sim commands. They never change state directly.
 - All tunable numbers and all content (styles, races, traits, events, petitions, story, buildings, dungeons) go in `src/data/*.json`, not in code.

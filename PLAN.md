@@ -1,6 +1,6 @@
 # Hearthcrown — Game Design & Build Plan
 
-Working title: **Hearthcrown**. A top-down 2D browser game. You play a young **princess** who must rebuild the fallen capital from an empty field. You never fight. You build the city, issue daily decrees, walk the streets, and hear your people's pleas. Adventurers live in your city and clear dungeons on their own. Once they leave the gates, they are out of your hands until they return.
+Working title: **Hearthcrown**. A browser game set in a 3D papercraft diorama. You play a young **princess** who must rebuild the fallen capital from an empty field. You never fight. You build the city, issue daily decrees, walk the streets, and hear your people's pleas. Adventurers live in your city and clear dungeons on their own. Once they leave the gates, they are out of your hands until they return.
 
 This plan is written for an AI coding assistant to implement milestone by milestone. Read `CLAUDE.md` for working rules.
 
@@ -23,7 +23,7 @@ All names, characters, story and art are original. Do not use names, terms or as
 
 ## 2. Tech stack
 
-- **TypeScript + Vite**, rendered with the plain **HTML Canvas 2D API**. No game engine.
+- **TypeScript + Vite**. The world is rendered in 3D with **Three.js** (a rendering library, not a game engine; approved 2026-11-10). Panels and dialogs are HTML/CSS on top. No game engine.
 - **Vitest** for unit tests of simulation logic.
 - **No backend.** Saves go to `localStorage` as JSON with a version number.
 - Art: a **flat, hand-drawn chibi cartoon** style, drawn in code as vector shapes (SVG paths / Canvas `Path2D`). Thick dark outlines with a slight hand-drawn wobble, flat fills, minimal shading, big round heads, dot eyes, rosy cheeks. Characters are about 1.5 tiles tall on the map, and the same drawing scales up for portraits in dialogs and the Audience Hall. Reference: `docs/art/princess-reference.png` (option B). The style is our own; no characters, art or exact look from any existing game. See 4.21 for character looks.
@@ -32,11 +32,23 @@ All names, characters, story and art are original. Do not use names, terms or as
 All art must be replaceable later, piece by piece, without code changes (for example by a human artist who doesn't want AI-made art in the game).
 - **Art by name only.** Sim and UI code refer to art by stable IDs (`hair.female.long_wavy`, `building.cottage.1`, `tile.road`, `icon.gold`, `portrait.princess`). Nothing outside `render/art/` knows how a piece is drawn.
 - **Art packs.** A manifest maps each ID to a source: `code` (a built-in vector drawing) or an image file (PNG or SVG) in `public/art/<pack>/`. Packs can be partial. Any ID a pack doesn't cover falls back to the built-in code drawing, so a half-finished pack never breaks the game.
-- **Fixed frames and anchors.** Every character part shares one frame size and anchor (feet on the ground line, head position), and every building size has its own frame, so swapped layers always line up.
+- **Fixed frames and anchors.** Every character part shares one frame size and anchor (feet on the ground line, head position), in a **front** and a **back** view, so swapped layers always line up.
+- **Buildings are panel sets.** Each papercraft building (2.2) is a set of flat images, one art ID per face: front, side, back, gable and roof (`building.cottage.1.front` ...). Each building footprint has fixed panel sizes, like a papercraft template.
 - **Recolorable layers.** Parts that take colors (skin, hair, outfits) come as a fill layer the game tints plus a line layer drawn on top.
-- **Artist kit.** `docs/art/ART-GUIDE.md` (frame sizes, anchors, layer order, tinting, walk frames, file naming) and blank template images with guides, usable in any drawing program.
+- **Artist kit.** `docs/art/ART-GUIDE.md` (frame sizes, anchors, layer order, tinting, walk frames, front and back views, building panel templates, file naming) and blank template images with guides, usable in any drawing program.
 - **Art gallery.** A dev-only page showing every art ID and random character combinations, for checking new art in place.
 - Built in M1 (registry, packs, buildings and tiles) and M2 (character parts, gallery, ART-GUIDE).
+
+### 2.2 The world: a papercraft diorama
+Chosen 2026-11-10 after a hands-on test. Reference: `docs/art/world-reference.png`.
+- **The map is a tabletop diorama** on a wooden base, seen from above at a fixed tilt.
+- **The camera** follows the princess. The player can **turn it in 45° steps** and zoom. Movement is relative to the camera: "up" always walks away from you.
+- **Buildings are papercraft:** real 3D boxes and roofs whose faces are flat hand-drawn panels (2.1). Turning the camera shows their sides and backs.
+- **Small things are flat cut-outs** that always turn to face the camera: characters, trees, wells, signs, rubble, props.
+- **Characters have a front and a back.** They show their back when walking away from the camera, and flip like paper when they change direction.
+- **Town walls and towers** are simple solid shapes with ink outlines, matching the drawn style.
+- **Light:** real shadows from a sun, and the light shifts through the day (warm dusk, dim night).
+- **A castle town.** Stone town walls with gatehouses at the three gates (west, south, east), the castle on the north wall, cobbled streets inside the walls, a central plaza with a well and the decree board, and dirt roads leading out of the gates into the fields.
 
 ### Architecture
 
@@ -57,7 +69,8 @@ src/
                     unlocks, score
   data/             JSON: buildings, races, styles, skills, traits, items,
                     research, dungeons, events, petitions, story, balance, map
-  render/           canvas: map, buildings, walkers, princess, overlays
+  render/           Three.js: diorama ground, papercraft buildings, cut-out
+                    walkers and props, princess, camera, light, overlays
   ui/               HTML/CSS panels and dialogs
   main.ts           fixed-tick sim loop + requestAnimationFrame render
 tests/
@@ -361,6 +374,7 @@ Every citizen and adventurer gets a look rolled **once, at creation**, with the 
 - **Race weights the rolls:** dwarves (male) very likely bearded; elves always pointed ears; beastkin ears and tail matching their animal; angelfolk small wings.
 - **Styles change outfits and gear, never faces or hair.** A changed adventurer is still recognizable.
 - **Households look related:** citizens in one household share a skin tone and lean toward the same hair color.
+- **Front and back.** Every part has a front view and a back view (2.2), so a rolled look also has a matching back.
 - **The princess** is hand-designed, not rolled.
 
 ### 4.22 New Game+
@@ -375,7 +389,7 @@ After the ending, the player can start New Game+: a long age has passed, the cit
 
 ## 5. UI
 
-- **Map view** (canvas) with pan and zoom. The princess walks on it. Select a lot to build. Inspect a person (hover, tap, or keyboard) to see name, race, style, mood and known traits.
+- **Map view** (the 3D diorama, 2.2) with camera turning and zoom. The princess walks on it. Select a lot to build. Inspect a person (hover, tap, or keyboard) to see name, race, style, mood and known traits.
 - **Top bar**: day, chapter, clock, speed, gold, Emberstone, population, morale gauge, reputation.
 - **Panels**: Build, Decrees, Adventurers (stats, traits, bond web; view only, see 4.2 "Face to face"), Guilds, Research, World Map, Inventory (style items and gifts), Story log, Promises.
 - **Dialogs**: morning event, story scenes, audience petitions, conversations, style requests, guild petitions, retirement.
@@ -395,7 +409,7 @@ There are three control schemes for one game. Every action must work in all thre
 | Open panels | Number keys or a menu key | Click top-bar or side buttons | Tap on-screen buttons |
 | Choose in dialogs and menus | Arrows + Enter | Click | Tap |
 | Build | Arrows move a highlight from lot to lot, Enter places | Click a lot | Tap a lot |
-| Pan / zoom the map | Keys (to be set in M2) | Drag / scroll wheel | Drag / pinch |
+| Turn / zoom the camera | Q / E turn 45°, + / − zoom | On-screen turn buttons, scroll wheel | On-screen turn buttons, pinch |
 | **Back** (leave a menu, go up one level) | **Esc** | Right-click or the on-screen **Back** button | On-screen **Back** button or the phone's back gesture |
 
 Rules:
@@ -404,6 +418,7 @@ Rules:
 - **Back** goes up one level at a time. With nothing open it does nothing, so it never quits the game or loses progress.
 - Every focusable UI element shows a clear keyboard focus state.
 - Every milestone's browser check also exercises its new features with the keyboard alone.
+- The camera follows the princess (or the build highlight in build mode). Right-click stays reserved for Back, so the mouse never turns the camera by dragging.
 
 ### 5.2 Becoming an app (later)
 - After the game is playable: make it an installable web app (home-screen icon, full screen, works offline). This fits in M18.
@@ -417,9 +432,9 @@ Build in this order. Each milestone ends with the game running in the browser, t
 
 | # | Milestone | Done when |
 |---|---|---|
-| M0 | Scaffold | Vite + TS + Vitest run. Canvas draws a grid. Seeded RNG tested. `DESIGN.md` created with Impeccable. `window.__hearthcrown` debug hook exists. Playwright opens the page with no console errors. |
-| M1 | Map & placement | Map JSON loads. Lots and roads draw. Placement follows the rules (tested). Art registry and packs with fallback (2.1) draw tiles and buildings. |
-| M2 | Paths, walkers, princess | Dijkstra tested. People walk on roads. The princess can be moved around. Simple map editor. Character part frames, art gallery page, `ART-GUIDE.md` and templates (2.1). |
+| M0 | Scaffold | Vite + TS + Vitest run. Three.js draws the diorama ground with a tile grid; the camera turns and zooms. Seeded RNG tested. `DESIGN.md` created with Impeccable. `window.__hearthcrown` debug hook exists. Playwright opens the page with no console errors. |
+| M1 | Map & placement | Map JSON loads. Lots, roads, town walls and gates draw. Placement follows the rules (tested). Art registry and packs with fallback (2.1) draw ground and papercraft buildings from panels. |
+| M2 | Paths, walkers, princess | Dijkstra tested. People walk on roads. The princess can be moved around. Simple map editor. Cut-out characters and props facing the camera, front and back views, paper flip. Character part frames, art gallery page, `ART-GUIDE.md` and templates (2.1). |
 | M3 | Day loop | Clock, phases, speeds, night report. Citizens go out and come home. |
 | M4 | Economy & buildings | Gold and Emberstone, costs, tax, build and demolish caps, demolish unlock, upgrades, data-driven building list. |
 | M5 | Effects system | `effects.ts` runner with tests. Used by everything after this. |

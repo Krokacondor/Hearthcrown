@@ -8,7 +8,7 @@ web
 
 ## Stack
 
-Decided in `PLAN.md` section 2: TypeScript + Vite, plain HTML Canvas 2D for the map, HTML/CSS for panels and dialogs, Vitest for tests. No game engine and no UI framework. No backend; saves live in `localStorage`. An installable web app comes in M18. Store apps (Android, iPhone) may wrap the same build later with Capacitor, so the design language stays web, not native.
+Decided in `PLAN.md` section 2: TypeScript + Vite, Three.js for the 3D diorama map, HTML/CSS for panels and dialogs, Vitest for tests. No game engine and no UI framework. No backend; saves live in `localStorage`. An installable web app comes in M18. Store apps (Android, iPhone) may wrap the same build later with Capacitor, so the design language stays web, not native.
 
 ## Users
 
@@ -17,7 +17,7 @@ Decided in `PLAN.md` section 2: TypeScript + Vite, plain HTML Canvas 2D for the 
 
 ## Product Purpose
 
-Hearthcrown is a top-down 2D kingdom-management game. You play a young princess rebuilding her fallen capital from an empty field. You never fight. You build the city, issue decrees, walk the streets, and hear your people's pleas. Adventurers live in the city and clear dungeons on their own; once they leave the gates they are out of your hands until dusk.
+Hearthcrown is a kingdom-management game set in a 3D papercraft diorama: papercraft buildings you can turn the camera around, flat cut-out characters with front and back views, inside a walled castle town. You play a young princess rebuilding her fallen capital from an empty field. You never fight. You build the city, issue decrees, walk the streets, and hear your people's pleas. Adventurers live in the city and clear dungeons on their own; once they leave the gates they are out of your hands until dusk.
 
 Success is the three feelings the maker named:
 1. **Building a city from nothing.** Every building makes the place more alive, and named citizens move in.
