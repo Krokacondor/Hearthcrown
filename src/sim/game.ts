@@ -58,10 +58,16 @@ export function createGame(seed: number): Game {
         adventurers: world.adventurers.length,
       };
     },
-    command(name, args = {}) {
-      const run = Object.hasOwn(commands, name) ? commands[name] : undefined;
-      if (!run) return { ok: false, error: `Unknown command: ${name}` };
-      return run(args);
+    // Never throws: the debug hook calls this from untyped console and test code.
+    command(name, args) {
+      try {
+        const run = typeof name === "string" && Object.hasOwn(commands, name) ? commands[name] : undefined;
+        if (!run) return { ok: false, error: `Unknown command: ${String(name)}` };
+        const safeArgs = typeof args === "object" && args !== null ? args : {};
+        return run(safeArgs);
+      } catch (e) {
+        return { ok: false, error: `Command failed: ${e instanceof Error ? e.message : "bad input"}` };
+      }
     },
   };
 }

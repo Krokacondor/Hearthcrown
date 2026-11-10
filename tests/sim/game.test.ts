@@ -53,4 +53,21 @@ describe("game", () => {
     if (!result.ok) expect(result.error).toContain("summonDragon");
     expect(game.snapshot()).toEqual(before);
   });
+
+  it("command never throws on malformed args or names, and changes nothing", () => {
+    const game = createGame(7);
+    const before = game.snapshot();
+    const cmd = game.command as (name: unknown, args?: unknown) => { ok: boolean };
+    const throwingArgs = { get seed(): number { throw new Error("boom"); } };
+    const cases: [unknown, unknown][] = [
+      ["setSeed", null], ["setSeed", 5], ["setSeed", "seed"], ["setSeed", throwingArgs],
+      [Symbol("x"), undefined], [{ toString: null }, undefined], [null, undefined], [42, {}],
+    ];
+    for (const [name, args] of cases) {
+      let result: { ok: boolean } | undefined;
+      expect(() => { result = cmd(name, args); }).not.toThrow();
+      expect(result?.ok).toBe(false);
+    }
+    expect(game.snapshot()).toEqual(before);
+  });
 });
