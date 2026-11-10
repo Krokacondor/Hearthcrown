@@ -409,7 +409,7 @@ There are three control schemes for one game. Every action must work in all thre
 | Open panels | Number keys or a menu key | Click top-bar or side buttons | Tap on-screen buttons |
 | Choose in dialogs and menus | Arrows + Enter | Click | Tap |
 | Build | Arrows move a highlight from lot to lot, Enter places | Click a lot | Tap a lot |
-| Turn / zoom the camera | Q / E turn 45°, + / − zoom | On-screen turn buttons, scroll wheel | On-screen turn buttons, pinch |
+| Turn / zoom the camera | Q / E turn 45°, + / − zoom | On-screen turn buttons, scroll wheel | No turning (fixed angle); pinch to zoom |
 | **Back** (leave a menu, go up one level) | **Esc** | Right-click or the on-screen **Back** button | On-screen **Back** button or the phone's back gesture |
 
 Rules:
@@ -419,6 +419,8 @@ Rules:
 - Every focusable UI element shows a clear keyboard focus state.
 - Every milestone's browser check also exercises its new features with the keyboard alone.
 - The camera follows the princess (or the build highlight in build mode). Right-click stays reserved for Back, so the mouse never turns the camera by dragging.
+- **Camera turning is a PC extra.** Phones keep the default angle, so nothing in the game may require turning. The one exception to "every action works in all three schemes".
+- **Nothing important hides behind a building.** When a building blocks the view of the princess, the build highlight or a selected person, it fades to see-through until they are visible again.
 
 ### 5.2 Becoming an app (later)
 - After the game is playable: make it an installable web app (home-screen icon, full screen, works offline). This fits in M18.
