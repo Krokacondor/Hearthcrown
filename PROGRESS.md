@@ -22,12 +22,16 @@
 - Three.js 0.186.1 and @types/three 0.186.0, pinned exactly. Its soft shadow mode was removed in 0.186, so standard PCF shadows are used.
 - Fonts self-hosted with @fontsource (Lilita One, Nunito 5.3.0).
 - Camera and map numbers live in `balance.json`. Until M2 gives the camera a princess to follow, it frames the board's south-east corner.
+- After the final code review: `cmd()` now truly never throws (null args, odd names), phones pinch to zoom (one step per 15% finger spread), and wheel zoom builds up small trackpad movements (one step per 100px).
+- Smaller review notes deferred to later milestones (seed normalising, deep-readonly world, DPR change on monitor switch, no-WebGL focus label, top-bar refresh, wider purity guard, texture size limit) are listed in the M0 ledger and below.
 - The top bar, turn buttons, wheel zoom and key hints were added to M0 so Impeccable had a real shell to document; the plan only required the map.
 
 **Known issues / left for later**
-- Pinch-to-zoom on phones is not built yet (proposed for M2, waiting on the human's OK). Phones currently can't zoom.
 - Grass tufts are painted into the ground texture and lie sideways when the camera turns.
 - The JS bundle is 538 kB (135 kB gzipped), almost all Three.js; Vite warns about chunk size.
+- `setSeed 3.7` reports 3.7 but plays as seed 3; normalise the stored seed before saves exist (M18).
+- The top bar renders once; it needs a refresh path when time starts moving (M3).
+- Without WebGL the map stays focusable with a camera-keys label.
 - Not yet built from the design contract: panel flats, Back button, proscenium dialogs, princess chip, Emberstone and speed in the top bar, day/dusk lighting.
 
 **Next:** M1, Map & placement.
