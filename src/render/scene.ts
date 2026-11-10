@@ -19,7 +19,7 @@ export function createDiorama(container: HTMLElement): DioramaView | null {
     return null;
   }
   renderer.shadowMap.enabled = true;
-  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.shadowMap.type = THREE.PCFShadowMap;
   renderer.domElement.setAttribute("aria-hidden", "true");
   container.append(renderer.domElement);
 
