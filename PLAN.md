@@ -456,4 +456,5 @@ Build in this order. Each milestone ends with the game running in the browser, t
 - Seasons, festivals, and monster raids on the city.
 - Rival kingdom events.
 - Hard mode with stronger dungeons and a score bonus.
-- Swap shapes for a CC0 tileset.
+- Human-made art packs replacing the built-in drawings (2.1).
+- Mixing male and female parts in character looks and the makeover building (v1 keeps the pools separate).
