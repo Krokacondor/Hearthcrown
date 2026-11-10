@@ -26,7 +26,7 @@ All names, characters, story and art are original. Do not use names, terms or as
 - **TypeScript + Vite**, rendered with the plain **HTML Canvas 2D API**. No game engine.
 - **Vitest** for unit tests of simulation logic.
 - **No backend.** Saves go to `localStorage` as JSON with a version number.
-- Art: drawn in code (shapes, colors, simple icons) for v1. A CC0 tileset can be swapped in later behind a sprite interface.
+- Art: a **flat, hand-drawn chibi cartoon** style, drawn in code as vector shapes (SVG paths / Canvas `Path2D`). Thick dark outlines with a slight hand-drawn wobble, flat fills, minimal shading, big round heads, dot eyes, rosy cheeks. Characters are about 1.5 tiles tall on the map, and the same drawing scales up for portraits in dialogs and the Audience Hall. Reference: `docs/art/princess-reference.png` (option B). The style is our own; no characters, art or exact look from any existing game. See 4.21 for character looks.
 
 ### Architecture
 
@@ -320,6 +320,18 @@ At the end of the story:
 - **Guild**: (adventurers × 7 + average level × 2.3 + research ÷ 20) ÷ 2, plus a bonus per permanent guild.
 - Total = (3 × lowest + the other two) ÷ 5. Ranks D through SSS (≥ 200).
 
+### 4.21 Character looks
+Every citizen and adventurer gets a look rolled **once, at creation**, with the seeded RNG, and saved with them. They look the same for the rest of the game.
+
+- **Layered parts.** A look is a set of part IDs plus colors, one per slot, drawn in order. Parts live in `data/appearance.json` (drawing + metadata), so new parts never need new code.
+- **Slots (starting set):** skin tone, eyes (shape + color), eyebrows, mouth, hair style, hair color, facial hair, race features, extras (freckles, glasses, scar, blush), outfit.
+- **Sex.** Each character is created male or female. Each has **its own pool of parts** (hair styles, eyes and lashes, body and outfit cut). Shared slots like skin tone and colors use the same lists.
+- **Female characters never get facial hair**, in every race, dwarves included.
+- **Race weights the rolls:** dwarves (male) very likely bearded; elves always pointed ears; beastkin ears and tail matching their animal; angelfolk small wings.
+- **Styles change outfits and gear, never faces or hair.** A changed adventurer is still recognizable.
+- **Households look related:** citizens in one household share a skin tone and lean toward the same hair color.
+- **The princess** is hand-designed, not rolled.
+
 ---
 
 ## 5. UI
@@ -372,7 +384,7 @@ Build in this order. Each milestone ends with the game running in the browser, t
 | M3 | Day loop | Clock, phases, speeds, night report. Citizens go out and come home. |
 | M4 | Economy & buildings | Gold, costs, tax, build and demolish caps, upgrades, data-driven building list. |
 | M5 | Effects system | `effects.ts` runner with tests. Used by everything after this. |
-| M6 | Stats, races, adventurers | Nine stats, race stat leans, apprentices, recruiting, Novice, motivation, daily routine, rest rule, shop priority, buying. |
+| M6 | Stats, races, adventurers | Nine stats, race stat leans, apprentices, recruiting, Novice, motivation, daily routine, rest rule, shop priority, buying. Rolled character looks (4.21) for citizens and adventurers. |
 | M7 | Dungeons & combat | World map with neighbor unlocks, stat-based room fights, retreat and defeat, logs, rewards. |
 | M8 | Lodge & decrees | Lodge, party forming by role balance, decree board, sign-up bubbles, approve / Gain XP / Rest, 14:00 rule. |
 | M9 | Styles | All v1 styles with pros, cons and growth. Style request events, style items (end the adventurer's day), rare dungeon styles. |
