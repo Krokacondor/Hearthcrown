@@ -9,10 +9,11 @@
   },
   "camera": {
     "fov": 24,
+    "startTarget": { "x": 12, "z": 10 },
     "height": 10,
     "distance": 11,
     "lookHeight": 0.8,
-    "startZoom": 2,
+    "startZoom": 2.45,
     "minZoom": 0.9,
     "maxZoom": 3.4,
     "zoomStep": 0.15

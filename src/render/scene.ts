@@ -26,7 +26,8 @@ export function createDiorama(container: HTMLElement): DioramaView | null {
   const { widthTiles, depthTiles } = balance.map;
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(palette.sky);
-  scene.add(createGround(widthTiles, depthTiles, renderer.capabilities.getMaxAnisotropy()));
+  const ground = createGround(widthTiles, depthTiles, renderer.capabilities.getMaxAnisotropy());
+  scene.add(ground.group);
 
   scene.add(new THREE.AmbientLight(0xffffff, 2.1));
   const sun = new THREE.DirectionalLight(0xffffff, 1.35);
@@ -34,8 +35,9 @@ export function createDiorama(container: HTMLElement): DioramaView | null {
   sun.castShadow = true;
   sun.shadow.mapSize.set(2048, 2048);
   sun.shadow.bias = -0.0006;
-  const reach = Math.max(widthTiles, depthTiles) * 0.75;
+  const reach = Math.max(widthTiles, depthTiles) * 0.9;
   Object.assign(sun.shadow.camera, { left: -reach, right: reach, top: reach, bottom: -reach, near: 1, far: 90 });
+  sun.shadow.camera.updateProjectionMatrix();
   scene.add(sun);
 
   const camera = new THREE.PerspectiveCamera(balance.camera.fov, 1, 0.1, 400);
@@ -44,6 +46,7 @@ export function createDiorama(container: HTMLElement): DioramaView | null {
     setSize(width, height, pixelRatio) {
       renderer.setPixelRatio(pixelRatio);
       renderer.setSize(width, height, false);
+      ground.setResolution(width, height);
       camera.aspect = width / height;
       camera.updateProjectionMatrix();
     },

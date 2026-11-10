@@ -2,6 +2,7 @@ import "@fontsource/lilita-one/400.css";
 import "@fontsource/nunito/600.css";
 import "@fontsource/nunito/800.css";
 import "./style.css";
+import balance from "./data/balance.json";
 import type { DebugHook } from "./debug";
 import { startCamera, turn, zoomBy, type CameraState } from "./render/camera";
 import { createDiorama } from "./render/scene";
@@ -24,6 +25,7 @@ const view = createDiorama(map);
 if (!view) {
   byId("no-webgl").hidden = false;
   byId("turn").hidden = true;
+  byId("keys").hidden = true;
 } else {
   let cam: CameraState = startCamera();
   // Unwrapped turn count, so going from step 7 to 0 animates the short way round.
@@ -71,7 +73,8 @@ if (!view) {
     const k = reduceMotion.matches ? 1 : 1 - Math.pow(0.0005, dt);
     shownTurns += (goalTurns - shownTurns) * k;
     shownZoom += (cam.zoom - shownZoom) * k;
-    view.setCamera({ x: 0, z: 0 }, { step: shownTurns, zoom: shownZoom });
+    // M0 has no princess to follow yet, so frame a corner of the board (M2 follows her instead).
+    view.setCamera(balance.camera.startTarget, { step: shownTurns, zoom: shownZoom });
     view.render();
     requestAnimationFrame(frame);
   };

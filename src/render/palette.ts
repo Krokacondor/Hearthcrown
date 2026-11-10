@@ -4,6 +4,8 @@ export const palette = {
   gridLine: "#8dbf6c",
   tuft: "#6fae55",
   base: "#b07a4c",
+  stageFloor: "#e2bd8b",
+  stagePlank: "#c79a68",
   sky: "#cfe3ea",
   ink: "#3b2a2e",
   cobble: "#d1bd96",

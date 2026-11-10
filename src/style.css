@@ -2,7 +2,9 @@
 :root {
   --curtain: #c8324a;
   --curtain-deep: #a8253b;
-  --curtain-label: #ffe3e8;
+  --curtain-label: #fff2f4; /* 4.8:1 on curtain red */
+  --loved: #f59ac0;
+  --feared: #2f5fa8;
   --royal: #2f5fa8;
   --leaf: #5aa04a;
   --marigold: #f2b233; /* reserved: what you are doing right now */
@@ -71,13 +73,15 @@ html, body {
   position: absolute;
   inset: auto 0 calc(-1 * var(--scallop) - var(--line)) 0;
   height: var(--scallop);
-  background: radial-gradient(circle at 24px 0, var(--curtain) 17px, var(--ink) 17px 20px, transparent 20.5px) 0 0 / 48px var(--scallop) repeat-x;
+  background: radial-gradient(circle at 50% 0, var(--curtain) 17px, var(--ink) 17px 20px, transparent 20.5px) 0 0 / 48px var(--scallop);
+  background-repeat: round no-repeat; /* whole scallops at both ends, any width */
 }
 
 .crest {
   font: 400 30px/1 var(--font-display);
   letter-spacing: 0.01em;
-  text-shadow: 0 3px 0 var(--curtain-deep);
+  -webkit-text-stroke: 5px var(--ink); /* printed-card ink keyline */
+  paint-order: stroke fill;
   white-space: nowrap;
 }
 
@@ -100,7 +104,11 @@ html, body {
   height: 14px;
   border: var(--line) solid var(--ink);
   border-radius: 9px;
-  background: linear-gradient(90deg, #f7a3b8, #fff 50%, #8d8fb8);
+  overflow: visible;
+  /* Flat halves: Loved on the left, Feared on the right, an ink tick at even. */
+  background:
+    linear-gradient(var(--ink), var(--ink)) 50% 0 / 3px 100% no-repeat,
+    linear-gradient(90deg, var(--loved) 50%, var(--feared) 50%);
 }
 .meter::after {
   content: "";
@@ -142,7 +150,35 @@ html, body {
 .turn button:active { transform: translateY(2px) scale(0.96); }
 .turn button:focus-visible { outline: 4px solid var(--marigold); outline-offset: 2px; }
 .turn svg { width: 26px; height: 26px; fill: none; stroke: currentColor; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
-@media (hover: none) and (pointer: coarse) { .turn { display: none; } }
+/* Key hints, desktop only. */
+.keys {
+  position: fixed;
+  left: 50%;
+  bottom: max(24px, env(safe-area-inset-bottom));
+  z-index: 2;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  pointer-events: none;
+}
+.keys li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: var(--card);
+  border: var(--line) solid var(--ink);
+  border-radius: 10px;
+  box-shadow: var(--shadow-soft);
+  font: 800 14px/1 var(--font-body);
+  white-space: nowrap;
+}
+.keys kbd { font: 400 17px/1 var(--font-display); color: var(--royal); }
+
+@media (hover: none) and (pointer: coarse) { .turn, .keys { display: none; } }
 
 /* Shown only when WebGL is unavailable. */
 .notice {
@@ -159,13 +195,13 @@ html, body {
 }
 .notice h1 { margin: 0 0 8px; font: 400 26px/1.15 var(--font-display); color: var(--royal); }
 .notice p { margin: 0; max-width: 60ch; }
-.notice[hidden], .turn[hidden] { display: none; }
+.notice[hidden], .turn[hidden], .keys[hidden] { display: none; }
 
 /* Phones held sideways: a shorter pelmet. */
 @media (max-height: 500px) {
   :root { --pelmet-h: 56px; --scallop: 16px; }
-  .pelmet::after { background-size: 36px var(--scallop); background-image: radial-gradient(circle at 18px 0, var(--curtain) 13px, var(--ink) 13px 15.5px, transparent 16px); }
-  .crest { font-size: 22px; }
+  .pelmet::after { background-size: 36px var(--scallop); background-image: radial-gradient(circle at 50% 0, var(--curtain) 13px, var(--ink) 13px 15.5px, transparent 16px); }
+  .crest { font-size: 22px; -webkit-text-stroke-width: 4px; }
   .stat dd { font-size: 24px; }
   .stat dt { font-size: 10px; }
 }
