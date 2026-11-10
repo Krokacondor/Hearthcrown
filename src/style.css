@@ -1,0 +1,175 @@
+/* Toy Theatre: the kingdom is a paper stage (.impeccable/surfaces/index-html.md). */
+:root {
+  --curtain: #c8324a;
+  --curtain-deep: #a8253b;
+  --curtain-label: #ffe3e8;
+  --royal: #2f5fa8;
+  --leaf: #5aa04a;
+  --marigold: #f2b233; /* reserved: what you are doing right now */
+  --card: #fffdf8;
+  --ink: #3b2a2e;
+  --sky: #cfe3ea;
+  --line: 3px;
+  --pelmet-h: 76px;
+  --scallop: 22px;
+  --font-display: "Lilita One", "Nunito", system-ui, sans-serif;
+  --font-body: "Nunito", system-ui, sans-serif;
+  --shadow-soft: 0 3px 10px rgb(59 42 46 / 0.22);
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+  background: var(--sky);
+  color: var(--ink);
+  font: 600 16px/1.35 var(--font-body);
+  font-variant-numeric: tabular-nums;
+  caret-color: var(--curtain);
+  -webkit-tap-highlight-color: transparent;
+}
+
+::selection { background: var(--marigold); color: var(--ink); }
+
+/* The stage: the 3D map fills the whole window, under the pelmet. */
+#map {
+  position: fixed;
+  inset: 0;
+  touch-action: none;
+  outline: none;
+}
+#map canvas { display: block; width: 100%; height: 100%; }
+#map:focus-visible::after {
+  content: "";
+  position: absolute;
+  inset: calc(var(--pelmet-h) + var(--scallop) - 4px) 0 0 0;
+  border: 4px solid var(--marigold);
+  border-top: 0;
+  pointer-events: none;
+}
+
+/* The pelmet: a red valance with a scalloped hem across the top of the stage. */
+.pelmet {
+  position: fixed;
+  inset: 0 0 auto 0;
+  z-index: 2;
+  height: var(--pelmet-h);
+  padding: 0 max(24px, env(safe-area-inset-right)) 0 max(24px, env(safe-area-inset-left));
+  display: flex;
+  align-items: center;
+  gap: clamp(20px, 3vw, 44px);
+  background: var(--curtain);
+  border-bottom: var(--line) solid var(--ink);
+  color: #fff;
+  pointer-events: none;
+}
+.pelmet::after {
+  content: "";
+  position: absolute;
+  inset: auto 0 calc(-1 * var(--scallop) - var(--line)) 0;
+  height: var(--scallop);
+  background: radial-gradient(circle at 24px 0, var(--curtain) 17px, var(--ink) 17px 20px, transparent 20.5px) 0 0 / 48px var(--scallop) repeat-x;
+}
+
+.crest {
+  font: 400 30px/1 var(--font-display);
+  letter-spacing: 0.01em;
+  text-shadow: 0 3px 0 var(--curtain-deep);
+  white-space: nowrap;
+}
+
+.stats { display: flex; align-items: center; gap: clamp(18px, 2.6vw, 36px); margin: 0; }
+.stat { display: flex; flex-direction: column; gap: 3px; }
+.stat dt {
+  font: 800 11px/1 var(--font-body);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--curtain-label);
+}
+.stat dd { margin: 0; font: 400 32px/1.05 var(--font-display); }
+.stat--meter dd { padding-top: 6px; padding-bottom: 6px; }
+
+.meter {
+  --pos: 50%;
+  position: relative;
+  display: block;
+  width: clamp(110px, 12vw, 170px);
+  height: 14px;
+  border: var(--line) solid var(--ink);
+  border-radius: 9px;
+  background: linear-gradient(90deg, #f7a3b8, #fff 50%, #8d8fb8);
+}
+.meter::after {
+  content: "";
+  position: absolute;
+  top: -7px;
+  left: calc(var(--pos) - 6px);
+  width: 12px;
+  height: 22px;
+  background: var(--card);
+  border: var(--line) solid var(--ink);
+  border-radius: 4px;
+  transition: left 400ms var(--ease-out);
+}
+
+/* Camera turn buttons (PC extra; phones keep a fixed angle). */
+.turn {
+  position: fixed;
+  right: max(20px, env(safe-area-inset-right));
+  bottom: max(20px, env(safe-area-inset-bottom));
+  z-index: 2;
+  display: flex;
+  gap: 10px;
+}
+.turn button {
+  width: 52px;
+  height: 52px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: var(--line) solid var(--ink);
+  border-radius: 50%;
+  background: var(--card);
+  color: var(--ink);
+  box-shadow: var(--shadow-soft);
+  cursor: pointer;
+  transition: transform 160ms var(--ease-out), background-color 160ms var(--ease-out);
+}
+.turn button:hover { background: #fff6dc; }
+.turn button:active { transform: translateY(2px) scale(0.96); }
+.turn button:focus-visible { outline: 4px solid var(--marigold); outline-offset: 2px; }
+.turn svg { width: 26px; height: 26px; fill: none; stroke: currentColor; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
+@media (hover: none) and (pointer: coarse) { .turn { display: none; } }
+
+/* Shown only when WebGL is unavailable. */
+.notice {
+  position: fixed;
+  inset: calc(var(--pelmet-h) + 60px) 0 auto 0;
+  z-index: 3;
+  width: min(520px, calc(100% - 32px));
+  margin: 0 auto;
+  padding: 22px 26px;
+  background: var(--card);
+  border: var(--line) solid var(--ink);
+  border-radius: 14px;
+  box-shadow: var(--shadow-soft);
+}
+.notice h1 { margin: 0 0 8px; font: 400 26px/1.15 var(--font-display); color: var(--royal); }
+.notice p { margin: 0; max-width: 60ch; }
+.notice[hidden], .turn[hidden] { display: none; }
+
+/* Phones held sideways: a shorter pelmet. */
+@media (max-height: 500px) {
+  :root { --pelmet-h: 56px; --scallop: 16px; }
+  .pelmet::after { background-size: 36px var(--scallop); background-image: radial-gradient(circle at 18px 0, var(--curtain) 13px, var(--ink) 13px 15.5px, transparent 16px); }
+  .crest { font-size: 22px; }
+  .stat dd { font-size: 24px; }
+  .stat dt { font-size: 10px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .meter::after, .turn button { transition: none; }
+}

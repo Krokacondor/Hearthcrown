@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#c8324a" />
+    <title>Hearthcrown</title>
+  </head>
+  <body>
+    <header id="topbar" class="pelmet" aria-label="Kingdom status">
+      <span class="crest">Hearthcrown</span>
+      <dl class="stats">
+        <div class="stat"><dt>Day</dt><dd data-stat="day">1</dd></div>
+        <div class="stat"><dt>Time</dt><dd data-stat="time">6:00</dd></div>
+        <div class="stat"><dt>Gold</dt><dd data-stat="gold">100</dd></div>
+        <div class="stat stat--meter">
+          <dt id="rep-label">Loved · Feared</dt>
+          <dd>
+            <span class="meter" role="meter" data-stat="reputation" aria-labelledby="rep-label"
+              aria-valuemin="-100" aria-valuemax="100" aria-valuenow="0" aria-valuetext="Even"></span>
+          </dd>
+        </div>
+      </dl>
+    </header>
+
+    <main id="map" tabindex="0" aria-label="City map. Q and E turn the camera; plus and minus zoom."></main>
+
+    <nav id="turn" class="turn" aria-label="Camera">
+      <button type="button" data-turn="left" aria-label="Turn camera left">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12a7 7 0 1 0 2.1-5" /><path d="M7.5 2.5 7.1 7l4.4.6" /></svg>
+      </button>
+      <button type="button" data-turn="right" aria-label="Turn camera right">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12a7 7 0 1 1-2.1-5" /><path d="M16.5 2.5l.4 4.5-4.4.6" /></svg>
+      </button>
+    </nav>
+
+    <div id="no-webgl" class="notice" role="alert" hidden>
+      <h1>The town can't be shown here</h1>
+      <p>This browser can't draw 3D. Try a recent Chrome, Edge, Firefox or Safari, or turn on hardware acceleration in your browser settings.</p>
+    </div>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
