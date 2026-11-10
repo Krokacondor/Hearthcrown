@@ -28,6 +28,16 @@ All names, characters, story and art are original. Do not use names, terms or as
 - **No backend.** Saves go to `localStorage` as JSON with a version number.
 - Art: a **flat, hand-drawn chibi cartoon** style, drawn in code as vector shapes (SVG paths / Canvas `Path2D`). Thick dark outlines with a slight hand-drawn wobble, flat fills, minimal shading, big round heads, dot eyes, rosy cheeks. Characters are about 1.5 tiles tall on the map, and the same drawing scales up for portraits in dialogs and the Audience Hall. Reference: `docs/art/princess-reference.png` (option B). The style is our own; no characters, art or exact look from any existing game. See 4.21 for character looks.
 
+### 2.1 Replaceable art
+All art must be replaceable later, piece by piece, without code changes (for example by a human artist who doesn't want AI-made art in the game).
+- **Art by name only.** Sim and UI code refer to art by stable IDs (`hair.female.long_wavy`, `building.cottage.1`, `tile.road`, `icon.gold`, `portrait.princess`). Nothing outside `render/art/` knows how a piece is drawn.
+- **Art packs.** A manifest maps each ID to a source: `code` (a built-in vector drawing) or an image file (PNG or SVG) in `public/art/<pack>/`. Packs can be partial. Any ID a pack doesn't cover falls back to the built-in code drawing, so a half-finished pack never breaks the game.
+- **Fixed frames and anchors.** Every character part shares one frame size and anchor (feet on the ground line, head position), and every building size has its own frame, so swapped layers always line up.
+- **Recolorable layers.** Parts that take colors (skin, hair, outfits) come as a fill layer the game tints plus a line layer drawn on top.
+- **Artist kit.** `docs/art/ART-GUIDE.md` (frame sizes, anchors, layer order, tinting, walk frames, file naming) and blank template images with guides, usable in any drawing program.
+- **Art gallery.** A dev-only page showing every art ID and random character combinations, for checking new art in place.
+- Built in M1 (registry, packs, buildings and tiles) and M2 (character parts, gallery, ART-GUIDE).
+
 ### Architecture
 
 ```
@@ -379,8 +389,8 @@ Build in this order. Each milestone ends with the game running in the browser, t
 | # | Milestone | Done when |
 |---|---|---|
 | M0 | Scaffold | Vite + TS + Vitest run. Canvas draws a grid. Seeded RNG tested. `DESIGN.md` created with Impeccable. `window.__hearthcrown` debug hook exists. Playwright opens the page with no console errors. |
-| M1 | Map & placement | Map JSON loads. Lots and roads draw. Placement follows the rules (tested). |
-| M2 | Paths, walkers, princess | Dijkstra tested. People walk on roads. The princess can be moved around. Simple map editor. |
+| M1 | Map & placement | Map JSON loads. Lots and roads draw. Placement follows the rules (tested). Art registry and packs with fallback (2.1) draw tiles and buildings. |
+| M2 | Paths, walkers, princess | Dijkstra tested. People walk on roads. The princess can be moved around. Simple map editor. Character part frames, art gallery page, `ART-GUIDE.md` and templates (2.1). |
 | M3 | Day loop | Clock, phases, speeds, night report. Citizens go out and come home. |
 | M4 | Economy & buildings | Gold, costs, tax, build and demolish caps, upgrades, data-driven building list. |
 | M5 | Effects system | `effects.ts` runner with tests. Used by everything after this. |
