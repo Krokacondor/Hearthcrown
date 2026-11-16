@@ -1,0 +1,14 @@
+{
+  "buildings": [
+    { "id": "cottage", "name": "Cottage", "size": [1, 1], "door": [0], "art": "building.cottage.1",
+      "height": 1.0, "roofRise": 0.45, "site": "open", "inBuildMenu": true },
+    { "id": "familyHome", "name": "Family Home", "size": [2, 1], "door": [0, 1], "art": "building.familyHome.1",
+      "height": 1.1, "roofRise": 0.5, "site": "open", "inBuildMenu": true },
+    { "id": "manor", "name": "Manor", "size": [2, 2], "door": [0], "art": "building.manor.1",
+      "height": 1.5, "roofRise": 0.6, "site": "open", "inBuildMenu": true },
+    { "id": "lodge", "name": "Adventurers' Lodge", "size": [3, 2], "door": [1], "art": "building.lodge.1",
+      "height": 1.4, "roofRise": 0.7, "site": "open", "inBuildMenu": true },
+    { "id": "castle", "name": "Castle", "size": [6, 4], "door": [2, 3], "art": "building.castle.1",
+      "height": 3.0, "roofRise": 1.4, "site": "castleGrounds", "inBuildMenu": false }
+  ]
+}
