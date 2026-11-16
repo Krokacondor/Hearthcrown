@@ -15,6 +15,8 @@ export interface BuildingDef {
   roofRise: number;
   site: "open" | "castleGrounds";
   inBuildMenu: boolean;
+  /** Homes only: how many people live there (PLAN.md 5). The low end matters for families (M6). */
+  residents?: { min: number; max: number };
 }
 
 const fail = (msg: string): never => {
@@ -48,10 +50,19 @@ export function loadBuildingDefs(json: unknown): ReadonlyMap<string, BuildingDef
     if (!isPosNum(b.height) || !isPosNum(b.roofRise)) fail(`${where}.height and roofRise must be above 0`);
     if (b.site !== "open" && b.site !== "castleGrounds") fail(`${where}.site must be open or castleGrounds`);
     if (typeof b.inBuildMenu !== "boolean") fail(`${where}.inBuildMenu must be true or false`);
+    let residents: BuildingDef["residents"];
+    if (b.residents !== undefined) {
+      const r = b.residents;
+      if (!Array.isArray(r) || r.length !== 2 || !isPosInt(r[0]) || !isPosInt(r[1]) || r[0] > r[1]) {
+        fail(`${where}.residents must be two whole numbers, min 1, min <= max`);
+      }
+      residents = { min: (r as number[])[0]!, max: (r as number[])[1]! };
+    }
     defs.set(b.id as string, {
       id: b.id as string, name: b.name as string, size: [w, d], door: [...new Set(door as number[])],
       art: b.art as string, height: b.height as number, roofRise: b.roofRise as number,
       site: b.site as BuildingDef["site"], inBuildMenu: b.inBuildMenu as boolean,
+      ...(residents ? { residents } : {}),
     });
   });
   return defs;

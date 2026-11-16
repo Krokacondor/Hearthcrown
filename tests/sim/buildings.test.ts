@@ -21,6 +21,22 @@ describe("loadBuildingDefs", () => {
     expect(def("castle")).toMatchObject({ name: "Castle", size: [6, 4], door: [2, 3], site: "castleGrounds", inBuildMenu: false });
   });
 
+  it("gives homes a resident range", () => {
+    expect(def("cottage").residents).toEqual({ min: 1, max: 2 });
+    expect(def("familyHome").residents).toEqual({ min: 3, max: 5 });
+    expect(def("manor").residents).toEqual({ min: 4, max: 6 });
+    expect(def("lodge").residents).toBeUndefined();
+    expect(def("castle").residents).toBeUndefined();
+  });
+
+  it("rejects a bad resident range", () => {
+    for (const bad of [[0, 2], [3, 2], [1], "two", [1.5, 2]]) {
+      const j = structuredClone(buildingsJson) as { buildings: Record<string, unknown>[] };
+      j.buildings[0]!.residents = bad;
+      expect(() => loadBuildingDefs(j), JSON.stringify(bad)).toThrow(/buildings\.json: cottage\.residents/);
+    }
+  });
+
   it("rejects bad data with a message naming buildings.json", () => {
     const base = () => structuredClone(buildingsJson) as { buildings: Record<string, unknown>[] };
     const cases: [string, (j: { buildings: Record<string, unknown>[] }) => void][] = [
