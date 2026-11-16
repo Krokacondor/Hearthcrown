@@ -80,6 +80,7 @@ PLAN.md's M2 row is split in two (decided by the human):
 - The no-stranding rule, "Roads must join a road", door checks and all M1 reason messages keep working, now per road cell. A removal that would cut something off is refused with the same named reasons.
 - In build mode, the road ghost is a 2×2 footprint; arrow steps and painting move one road cell (2 squares) at a time; drag painting fills whole cells. Buildings still move 1 square at a time.
 - Outside the walls, the dirt roads to the gates become 2 wide as well.
+- **Castle forecourt** (decided by the human from the layout picture, 2026-11-16): the paving in front of the castle door is 6 wide, the castle's full width (the north road plus one road cell either side). The quest board stands on the forecourt's back edge as a prop (like the statue, not a reserved square), so adventurers can gather in front of it. The forecourt counts as road and can never be removed, like the plaza and gates. Picture: `docs/design/m2-mockups/town-layout.html`.
 
 ## Pathfinding (goal 2)
 
