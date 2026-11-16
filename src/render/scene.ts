@@ -6,6 +6,7 @@ import type { Town, World } from "../sim/world";
 import type { ArtRegistry } from "./art/registry";
 import { createArtTextures } from "./art/textures";
 import { cameraPose, TURN_STEPS, type CameraState } from "./camera";
+import { createBuildGhost, type GhostItem } from "./buildGhost";
 import { createGround } from "./ground";
 import { segmentHitsBox } from "./occlusion";
 import { palette } from "./palette";
@@ -14,8 +15,12 @@ import { createTownView } from "./town";
 const INK_WIDTH_PX = 3.5;
 /** Opacity of a building, wall or gatehouse that stands in front of what the player is looking at. */
 const FADED = 0.3;
-/** Height above the ground the camera looks at when deciding what blocks the view. */
-const FOCUS_Y = 0.3;
+/** Height above the ground of the points the camera must see when deciding what blocks the view. */
+const FOCUS_Y = 0.05;
+
+/** A focus point inside a building's own box (the ghost overlapping it) doesn't make it fade. */
+const insideBox = (p: [number, number, number], b: { min: number[]; max: number[] }): boolean =>
+  p.every((v, i) => v >= b.min[i]! && v <= b.max[i]!);
 
 export interface DioramaView {
   setSize(width: number, height: number, pixelRatio: number): void;
@@ -23,10 +28,13 @@ export interface DioramaView {
   /** Adds and removes roads and buildings to match the world. */
   syncTown(world: Readonly<World>): void;
   setGridVisible(on: boolean): void;
-  /** Fades whatever stands between the camera and this point; null fades nothing. */
-  setFocus(point: { x: number; z: number } | null): void;
+  /** Fades whatever stands between the camera and any part of these squares; null fades nothing. */
+  setFocus(squares: readonly Square[] | null): void;
   /** The board square under a screen point, or null off the board. */
   pickSquare(clientX: number, clientY: number): Square | null;
+  /** The placement preview at a square (green when it fits, red when not). */
+  showGhost(item: GhostItem, at: Square, fits: boolean): void;
+  hideGhost(): void;
   render(dt: number): void;
 }
 
@@ -53,7 +61,8 @@ export function createDiorama(container: HTMLElement, town: Town, registry: ArtR
 
   const ground = createGround(width, depth, stage.walls, renderer.capabilities.getMaxAnisotropy(), art, ink);
   const townView = createTownView(town, 0, art, ink);
-  scene.add(ground.group, townView.group);
+  const ghost = createBuildGhost(town, art, ink);
+  scene.add(ground.group, townView.group, ghost.group);
 
   scene.add(new THREE.AmbientLight(0xffffff, 2.1));
   const sun = new THREE.DirectionalLight(0xffffff, 1.35);
@@ -69,7 +78,8 @@ export function createDiorama(container: HTMLElement, town: Town, registry: ArtR
   scene.add(sun);
 
   const camera = new THREE.PerspectiveCamera(balance.camera.fov, 1, 0.1, 500);
-  let focus: THREE.Vector3 | null = null;
+  /** Points to keep in view: each focus square's corners and centre, just above the ground. */
+  let focus: [number, number, number][] = [];
   const raycaster = new THREE.Raycaster();
   const groundPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
 
@@ -78,6 +88,7 @@ export function createDiorama(container: HTMLElement, town: Town, registry: ArtR
       renderer.setPixelRatio(pixelRatio);
       renderer.setSize(w, h, false);
       ink.resolution.set(w, h);
+      ghost.setResolution(w, h);
       camera.aspect = w / h;
       camera.updateProjectionMatrix();
     },
@@ -93,8 +104,12 @@ export function createDiorama(container: HTMLElement, town: Town, registry: ArtR
     setGridVisible(on) {
       ground.setGridVisible(on);
     },
-    setFocus(point) {
-      focus = point ? new THREE.Vector3(point.x, FOCUS_Y, point.z) : null;
+    setFocus(squares) {
+      focus = (squares ?? []).flatMap((s) => [
+        [s.x + 0.5, FOCUS_Y, s.z + 0.5] as [number, number, number],
+        [s.x + 0.05, FOCUS_Y, s.z + 0.05], [s.x + 0.95, FOCUS_Y, s.z + 0.05],
+        [s.x + 0.05, FOCUS_Y, s.z + 0.95], [s.x + 0.95, FOCUS_Y, s.z + 0.95],
+      ]);
     },
     pickSquare(clientX, clientY) {
       const rect = renderer.domElement.getBoundingClientRect();
@@ -106,12 +121,18 @@ export function createDiorama(container: HTMLElement, town: Town, registry: ArtR
       const x = Math.floor(hit.x), z = Math.floor(hit.z);
       return x >= 0 && z >= 0 && x < width && z < depth ? { x, z } : null;
     },
+    showGhost(item, at, fits) {
+      ghost.show(item, at, fits);
+    },
+    hideGhost() {
+      ghost.hide();
+    },
     render(dt) {
       const k = 1 - Math.pow(0.001, dt);
       const cam = camera.position.toArray() as [number, number, number];
       for (const o of townView.occluders()) {
-        const blocks = focus !== null &&
-          segmentHitsBox(cam, focus.toArray() as [number, number, number], { min: o.box.min.toArray(), max: o.box.max.toArray() });
+        const box = { min: o.box.min.toArray(), max: o.box.max.toArray() };
+        const blocks = focus.some((p) => !insideBox(p, box) && segmentHitsBox(cam, p, box));
         const goal = blocks ? FADED : 1;
         if (o.opacity === goal) continue;
         o.opacity = Math.abs(goal - o.opacity) < 0.01 ? goal : o.opacity + (goal - o.opacity) * k;
