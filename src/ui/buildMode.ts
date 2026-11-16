@@ -1,0 +1,268 @@
+// The Build menu and build mode (docs/design/build-menu-brief.md, spec goal 6). Reads sim state and calls
+// sim commands only; the rules and their messages come from the sim's checkPlacement.
+import type { DioramaView } from "../render/scene";
+import { footprint } from "../sim/buildings";
+import type { Game } from "../sim/game";
+import type { Rot, Square } from "../sim/townMap";
+import { actionFor } from "./bindings";
+import { arrowStep, buildKeyFor, clampToBoard, strokeSquares, tap, turnRot, type TapState } from "./buildInput";
+import { menuItems, moveSelection, type MenuItem } from "./buildMenu";
+
+export interface BuildModeDeps {
+  game: Game;
+  view: DioramaView;
+  map: HTMLElement;
+  /** The camera's current turn step (0..7), for camera-relative arrow moves. */
+  cameraStep(): number;
+  /** Where the camera is looking now. */
+  cameraTarget(): { x: number; z: number };
+  /** Glides the camera to look at a point. */
+  followTo(x: number, z: number): void;
+}
+
+export interface BuildMode {
+  /** The squares the camera should keep in view (fades whatever blocks them), or null when not placing. */
+  focusSquares(): Square[] | null;
+}
+
+type Mode = "closed" | "menu" | "placing";
+
+const el = <T extends HTMLElement>(sel: string): T => {
+  const found = document.querySelector<T>(sel);
+  if (!found) throw new Error(`Missing ${sel} in index.html`);
+  return found;
+};
+const same = (a: Square | null, b: Square | null): boolean => !!a && !!b && a.x === b.x && a.z === b.z;
+const sizeText = (item: MenuItem): string => (item.size ? `${item.size[0]}×${item.size[1]}` : "1×1");
+
+export function installBuildMode(deps: BuildModeDeps): BuildMode {
+  const { game, view, map } = deps;
+  const openBtn = el<HTMLButtonElement>("#build-open");
+  const flat = el<HTMLElement>("#build-flat");
+  const list = el<HTMLUListElement>("#build-list");
+  const tray = el<HTMLElement>("#build-tray");
+  const trayName = el<HTMLElement>('[data-tray="name"]');
+  const traySize = el<HTMLElement>('[data-tray="size"]');
+  const trayReason = el<HTMLElement>('[data-tray="reason"]');
+  const turnBtn = el<HTMLButtonElement>('[data-tray="turn"]');
+  const placeBtn = el<HTMLButtonElement>('[data-tray="place"]');
+  const { width, depth } = game.town.map;
+
+  const items = menuItems(game.town.defs);
+  let mode: Mode = "closed";
+  let item: MenuItem = items[0]!;
+  let rot: Rot = 0;
+  let hl: Square = { x: 0, z: 0 };
+  let taps: TapState = { armed: null };
+  let enterHeld = false;
+
+  // ---- The flat's rows.
+  const rows = items.map((it) => {
+    const li = document.createElement("li");
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "flat__row";
+    b.innerHTML = `<span></span><span class="flat__size"></span>`;
+    b.children[0]!.textContent = it.name;
+    b.children[1]!.textContent = sizeText(it);
+    b.setAttribute("aria-label", `${it.name}, ${sizeText(it).replace("×", " by ")}`);
+    b.addEventListener("click", () => choose(it));
+    li.append(b);
+    list.append(li);
+    return b;
+  });
+
+  // ---- Moving between levels: closed, menu, placing. Back goes up one level.
+  function openMenu(): void {
+    mode = "menu";
+    flat.hidden = false;
+    tray.hidden = true;
+    openBtn.setAttribute("aria-expanded", "true");
+    view.hideGhost();
+    view.setGridVisible(false);
+    (rows[items.indexOf(item)] ?? rows[0])?.focus({ preventScroll: true });
+  }
+  function closeAll(): void {
+    mode = "closed";
+    flat.hidden = true;
+    tray.hidden = true;
+    openBtn.setAttribute("aria-expanded", "false");
+    view.hideGhost();
+    view.setGridVisible(false);
+    enterHeld = false;
+    map.focus({ preventScroll: true });
+  }
+  function back(): void {
+    if (mode === "placing") openMenu();
+    else if (mode === "menu") closeAll();
+  }
+  function choose(it: MenuItem): void {
+    item = it;
+    mode = "placing";
+    rot = 0;
+    taps = { armed: null };
+    flat.hidden = true;
+    tray.hidden = false;
+    trayName.textContent = it.name;
+    traySize.textContent = sizeText(it);
+    turnBtn.hidden = it.id === "road";
+    const t = deps.cameraTarget();
+    hl = clampToBoard({ x: Math.floor(t.x), z: Math.floor(t.z) }, width, depth);
+    view.setGridVisible(true);
+    refresh();
+    map.focus({ preventScroll: true });
+  }
+
+  // ---- The preview and placing, all through sim commands.
+  function refresh(): void {
+    if (mode !== "placing") return;
+    const result = item.id === "road"
+      ? game.command("checkPlacement", { kind: "road", x: hl.x, z: hl.z })
+      : game.command("checkPlacement", { kind: "building", type: item.id, x: hl.x, z: hl.z, rot });
+    view.showGhost(item.id === "road" ? { kind: "road" } : { kind: "building", type: item.id, rot }, hl, result.ok);
+    const reason = result.ok ? "" : result.error;
+    if (trayReason.textContent !== reason) trayReason.textContent = reason;
+    placeBtn.disabled = !result.ok;
+  }
+  function roadAt(s: Square): void {
+    if (game.command("placeRoad", { x: s.x, z: s.z }).ok) view.syncTown(game.world);
+  }
+  function place(): void {
+    if (mode !== "placing") return;
+    if (item.id === "road") roadAt(hl);
+    else if (game.command("placeBuilding", { type: item.id, x: hl.x, z: hl.z, rot }).ok) view.syncTown(game.world);
+    refresh();
+  }
+  function moveTo(s: Square, follow: boolean): void {
+    hl = clampToBoard(s, width, depth);
+    if (follow) deps.followTo(hl.x + 0.5, hl.z + 0.5);
+    if (enterHeld && item.id === "road") roadAt(hl);
+    refresh();
+  }
+
+  // ---- Keyboard (keys from the bindings table).
+  document.addEventListener("keydown", (e) => {
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+    if (mode === "closed") {
+      if (actionFor("menu", e.key) === "build") { e.preventDefault(); openMenu(); }
+      return;
+    }
+    if (mode === "menu") {
+      const a = actionFor("menu", e.key);
+      if (a === "up" || a === "down") {
+        e.preventDefault();
+        const i = rows.indexOf(document.activeElement as HTMLButtonElement);
+        rows[moveSelection(i < 0 ? -1 : i, a === "up" ? -1 : 1, rows.length) ]?.focus();
+      } else if (a === "back" || a === "build") {
+        e.preventDefault();
+        if (a === "back") back(); else closeAll();
+      }
+      return;
+    }
+    // Placing. Enter on a focused tray button presses that button instead.
+    if (tray.contains(document.activeElement) && (e.key === "Enter" || e.key === " ")) return;
+    const k = buildKeyFor(e.key);
+    if (!k) return;
+    e.preventDefault();
+    if (k.kind === "move") {
+      const { dx, dz } = arrowStep(k.dir, deps.cameraStep());
+      moveTo({ x: hl.x + dx, z: hl.z + dz }, true);
+    } else if (k.kind === "turn") {
+      if (item.id !== "road") { rot = turnRot(rot); refresh(); }
+    } else if (k.kind === "place") {
+      if (e.repeat) return;
+      if (item.id === "road") enterHeld = true;
+      place();
+    } else {
+      back();
+    }
+  });
+  document.addEventListener("keyup", (e) => {
+    if (buildKeyFor(e.key)?.kind === "place") enterHeld = false;
+  });
+
+  // ---- Buttons.
+  openBtn.addEventListener("click", () => (mode === "closed" ? openMenu() : closeAll()));
+  for (const b of document.querySelectorAll<HTMLButtonElement>("[data-back]")) b.addEventListener("click", back);
+  turnBtn.addEventListener("click", () => { rot = turnRot(rot); refresh(); });
+  placeBtn.addEventListener("click", place);
+  // Right-click is Back everywhere (PLAN.md 5.1).
+  window.addEventListener("contextmenu", (e) => { e.preventDefault(); back(); });
+
+  // ---- Mouse: the highlight follows the pointer; click places; hold and drag paints roads. The camera stays put.
+  let mouseDown: Square | null = null;
+  let painting = false;
+  // ---- Touch: tap to preview, tap again (or Place) to build, drag to paint roads; a second finger cancels.
+  let fingers = 0;
+  let touch: { id: number; start: Square; last: Square; painting: boolean; cancelled: boolean } | null = null;
+
+  map.addEventListener("pointerdown", (e) => {
+    if (mode !== "placing") return;
+    const sq = view.pickSquare(e.clientX, e.clientY);
+    if (e.pointerType === "touch") {
+      fingers++;
+      if (fingers === 1 && sq) touch = { id: e.pointerId, start: sq, last: sq, painting: false, cancelled: false };
+      else if (touch) touch.cancelled = true;
+      return;
+    }
+    if (e.button !== 0 || !sq) return;
+    mouseDown = sq;
+    hl = sq;
+    if (item.id === "road") { painting = true; roadAt(sq); }
+    refresh();
+  });
+  map.addEventListener("pointermove", (e) => {
+    if (mode !== "placing") return;
+    const sq = view.pickSquare(e.clientX, e.clientY);
+    if (!sq) return;
+    if (e.pointerType === "touch") {
+      if (!touch || touch.id !== e.pointerId || touch.cancelled || fingers !== 1 || same(sq, touch.last)) return;
+      if (item.id === "road") {
+        if (!touch.painting) { touch.painting = true; roadAt(touch.start); }
+        for (const s of strokeSquares(touch.last, sq)) roadAt(s);
+      }
+      touch.last = sq;
+      hl = sq;
+      refresh();
+      return;
+    }
+    if (same(sq, hl)) return;
+    if (painting && (e.buttons & 1)) {
+      for (const s of strokeSquares(hl, sq)) roadAt(s);
+      hl = sq;
+      refresh();
+    } else {
+      moveTo(sq, false);
+    }
+  });
+  const endPointer = (e: PointerEvent): void => {
+    if (e.pointerType === "touch") {
+      fingers = Math.max(0, fingers - 1);
+      if (!touch || touch.id !== e.pointerId) return;
+      const t = touch;
+      touch = null;
+      if (e.type === "pointercancel" || t.cancelled || t.painting || mode !== "placing") return;
+      const r = tap(taps, t.last);
+      taps = r.state;
+      if (r.place && same(hl, t.last)) place();
+      else moveTo(t.last, true); // after the finger lifts, the camera glides to the preview
+      return;
+    }
+    if (mode === "placing" && e.button === 0 && item.id !== "road" && mouseDown) {
+      const sq = view.pickSquare(e.clientX, e.clientY);
+      if (same(sq, mouseDown)) place();
+    }
+    mouseDown = null;
+    painting = false;
+  };
+  map.addEventListener("pointerup", endPointer);
+  map.addEventListener("pointercancel", endPointer);
+
+  return {
+    focusSquares() {
+      if (mode !== "placing") return null;
+      const def = item.id === "road" ? undefined : game.town.defs.get(item.id);
+      return def ? footprint(def, hl.x, hl.z, rot).cells : [hl];
+    },
+  };
+}

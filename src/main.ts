@@ -11,6 +11,7 @@ import { startCamera, turn, zoomBy, type CameraState } from "./render/camera";
 import { createDiorama } from "./render/scene";
 import { viewSize } from "./render/viewSize";
 import { createGame } from "./sim/game";
+import { installBuildMode } from "./ui/buildMode";
 import { cameraActionForKey, type CameraAction } from "./ui/keys";
 import { renderTopBar } from "./ui/topbar";
 import { pinchSteps, wheelSteps } from "./ui/zoomInput";
@@ -35,7 +36,7 @@ const view = createDiorama(map, game.town, createArtRegistry(BUILTIN_IDS, packs)
 if (!view) {
   byId("no-webgl").hidden = false;
   byId("turn").hidden = true;
-  byId("keys").hidden = true;
+  byId("build-open").hidden = true;
 } else {
   view.syncTown(game.world);
   let cam: CameraState = startCamera();
@@ -43,6 +44,9 @@ if (!view) {
   let goalTurns = 0;
   let shownTurns = 0;
   let shownZoom = cam.zoom;
+  // What the camera looks at: the plaza until M2 gives it a princess to follow; the highlight while building.
+  const goalTarget = { ...balance.camera.startTarget };
+  const shownTarget = { ...goalTarget };
   const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)");
 
   const apply = (action: CameraAction): void => {
@@ -104,6 +108,15 @@ if (!view) {
     button.addEventListener("click", () => apply({ kind: "turn", dir: button.dataset.turn === "left" ? -1 : 1 }));
   }
 
+  const build = installBuildMode({
+    game,
+    view,
+    map,
+    cameraStep: () => cam.step,
+    cameraTarget: () => ({ ...goalTarget }),
+    followTo: (x, z) => { goalTarget.x = x; goalTarget.z = z; },
+  });
+
   const resize = (): void => {
     const s = viewSize(map.clientWidth, map.clientHeight, window.devicePixelRatio);
     view.setSize(s.width, s.height, s.pixelRatio);
@@ -118,8 +131,10 @@ if (!view) {
     const k = reduceMotion.matches ? 1 : 1 - Math.pow(0.0005, dt);
     shownTurns += (goalTurns - shownTurns) * k;
     shownZoom += (cam.zoom - shownZoom) * k;
-    // No princess to follow yet (M2), so frame the plaza.
-    view.setCamera(balance.camera.startTarget, { step: shownTurns, zoom: shownZoom });
+    shownTarget.x += (goalTarget.x - shownTarget.x) * k;
+    shownTarget.z += (goalTarget.z - shownTarget.z) * k;
+    view.setCamera(shownTarget, { step: shownTurns, zoom: shownZoom });
+    view.setFocus(build.focusSquares());
     view.render(dt);
     requestAnimationFrame(frame);
   };
