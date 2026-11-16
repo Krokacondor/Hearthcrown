@@ -16,5 +16,26 @@
     "minZoom": 1.0,
     "maxZoom": 7.6,
     "zoomStep": 0.4
+  },
+  "walk": {
+    "ticksPerSecond": 60,
+    "princessWalkSpeed": 2.4,
+    "princessSprintSpeed": 4.8,
+    "princessRadius": 0.25,
+    "hoverHeight": 0.25,
+    "personSpeed": 1.2,
+    "idleSeconds": [
+      2,
+      6
+    ],
+    "laneOffset": 0.5,
+    "talkRange": 1.5,
+    "bubbleWordsRange": 4,
+    "chatStartRange": 1.5,
+    "chatChance": 0.35,
+    "chatCooldownSeconds": 20,
+    "chatLineSeconds": 3,
+    "waitForPrincessSeconds": 10,
+    "figureHeight": 0.55
   }
 }

@@ -16,7 +16,7 @@ const BLOCKED = (): Check => no("blocked", "Something is in the way");
 const NEIGHBOURS: readonly [number, number][] = [[1, 0], [-1, 0], [0, 1], [0, -1]];
 
 /** Keys of squares covered by buildings. */
-function occupied(town: Town, world: World): Set<string> {
+export function occupied(town: Town, world: World): Set<string> {
   const out = new Set<string>();
   for (const b of world.buildings) {
     const def = town.defs.get(b.type);

@@ -1,5 +1,6 @@
 import balance from "../data/balance.json";
 import type { BuildingDef } from "./buildings";
+import { startPrincess, type Princess, type WalkInput } from "./princess";
 import type { Rot, Square, TownMap } from "./townMap";
 
 /** The fixed data a game is played on: the map and the building list. */
@@ -33,6 +34,9 @@ export interface World {
   roads: Square[];
   /** Index into the map's wall stages. */
   wallStage: number;
+  princess: Princess;
+  /** What the player is holding right now (keys or stick), set by a command. */
+  walkInput: WalkInput;
   /** Typed in M3. */
   citizens: unknown[];
   /** Typed in M6. */
@@ -52,6 +56,8 @@ export function createWorld(seed: number, town: Town): World {
     nextBuildingId: buildings.length + 1,
     roads: town.map.roads.map((r) => ({ ...r })),
     wallStage: 0,
+    princess: startPrincess(town),
+    walkInput: { x: 0, z: 0, sprint: false },
     citizens: [],
     adventurers: [],
   };
