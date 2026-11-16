@@ -143,13 +143,21 @@ export function createTownView(town: Town, stage: number, art: ArtTextures, ink:
   void art.apply(plazaMat, "tile.plaza", [plazaW, plazaD]);
   group.add(flatRect(map.plaza, ROAD_Y, plazaMat));
 
-  const squaresMesh = (squares: readonly Square[], id: string, colour: string): THREE.Mesh | null => {
+  // One tile shape and one material per road surface, shared by every rebuild.
+  const tileGeo = new THREE.PlaneGeometry(1, 1).rotateX(-Math.PI / 2);
+  const surfaceMats = new Map<string, THREE.MeshLambertMaterial>();
+  const surfaceMat = (id: string, colour: string): THREE.MeshLambertMaterial => {
+    let m = surfaceMats.get(id);
+    if (!m) {
+      m = new THREE.MeshLambertMaterial({ color: colour });
+      void art.apply(m, id);
+      surfaceMats.set(id, m);
+    }
+    return m;
+  };
+  const squaresMesh = (squares: readonly Square[], id: string, colour: string): THREE.InstancedMesh | null => {
     if (squares.length === 0) return null;
-    const geo = new THREE.PlaneGeometry(1, 1);
-    geo.rotateX(-Math.PI / 2);
-    const mat = new THREE.MeshLambertMaterial({ color: colour });
-    void art.apply(mat, id);
-    const mesh = new THREE.InstancedMesh(geo, mat, squares.length);
+    const mesh = new THREE.InstancedMesh(tileGeo, surfaceMat(id, colour), squares.length);
     const m4 = new THREE.Matrix4();
     squares.forEach((s, i) => mesh.setMatrixAt(i, m4.makeTranslation(s.x + 0.5, ROAD_Y, s.z + 0.5)));
     mesh.receiveShadow = true;
@@ -192,7 +200,12 @@ export function createTownView(town: Town, stage: number, art: ArtTextures, ink:
       const roadKey = roads.map(squareKey).sort().join(";");
       if (roadKey !== lastRoads) {
         lastRoads = roadKey;
-        for (const o of roadObjs) dynamic.remove(o);
+        for (const o of roadObjs) {
+          dynamic.remove(o);
+          // The tile shape and material are shared; only the instance buffer and ink lines are per rebuild.
+          if (o instanceof THREE.InstancedMesh) o.dispose();
+          else if (o instanceof LineSegments2) o.geometry.dispose();
+        }
         const network = [...roads, ...st.gates];
         const cobble = squaresMesh(network, "tile.road.cobble", palette.cobble);
         // Ink only where the road meets grass: the plaza counts as road for the outline.
@@ -246,6 +259,11 @@ export function createTownView(town: Town, stage: number, art: ArtTextures, ink:
     const have = buildingMeshes.get(id);
     if (!have) return;
     dynamic.remove(have.object);
+    // Textures are shared through the art cache, so only geometry and materials are freed here.
+    have.object.traverse((o) => {
+      if (o instanceof THREE.Mesh || o instanceof LineSegments2) o.geometry.dispose();
+    });
+    for (const m of have.object.userData.materials as THREE.Material[]) m.dispose();
     buildingMeshes.delete(id);
     const i = occluders.findIndex((o) => o.object === have.object);
     if (i >= 0) occluders.splice(i, 1);

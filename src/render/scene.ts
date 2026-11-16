@@ -35,6 +35,8 @@ export interface DioramaView {
   /** The placement preview at a square (green when it fits, red when not). */
   showGhost(item: GhostItem, at: Square, fits: boolean): void;
   hideGhost(): void;
+  /** GPU objects alive right now (dev checks for leaks). */
+  memory(): { geometries: number; textures: number };
   render(dt: number): void;
 }
 
@@ -130,6 +132,9 @@ export function createDiorama(container: HTMLElement, town: Town, registry: ArtR
     },
     hideGhost() {
       ghost.hide();
+    },
+    memory() {
+      return { ...renderer.info.memory };
     },
     render(dt) {
       townView.update(dt);

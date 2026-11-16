@@ -22,6 +22,27 @@ const svgUrl = (svg: string): string => `data:image/svg+xml;charset=utf-8,${enco
 
 export function createArtTextures(registry: ArtRegistry, maxAnisotropy: number): ArtTextures {
   const images = new Map<string, Promise<HTMLImageElement>>();
+  /** One GPU texture per art ID and tiling, shared by every material that uses it. */
+  const textures = new Map<string, Promise<THREE.Texture>>();
+  const textureFor = (id: string, repeat?: [number, number]): Promise<THREE.Texture> => {
+    const key = repeat ? `${id}|${repeat[0]}x${repeat[1]}` : id;
+    let t = textures.get(key);
+    if (!t) {
+      t = imageFor(id).then((img) => {
+        const tex = new THREE.Texture(img);
+        tex.colorSpace = THREE.SRGBColorSpace;
+        tex.anisotropy = maxAnisotropy;
+        if (repeat) {
+          tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+          tex.repeat.set(repeat[0], repeat[1]);
+        }
+        tex.needsUpdate = true;
+        return tex;
+      });
+      textures.set(key, t);
+    }
+    return t;
+  };
 
   const imageFor = (id: string): Promise<HTMLImageElement> => {
     let p = images.get(id);
@@ -41,15 +62,7 @@ export function createArtTextures(registry: ArtRegistry, maxAnisotropy: number):
 
   return {
     apply(material, id, repeat) {
-      return imageFor(id).then((img) => {
-        const tex = new THREE.Texture(img);
-        tex.colorSpace = THREE.SRGBColorSpace;
-        tex.anisotropy = maxAnisotropy;
-        if (repeat) {
-          tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
-          tex.repeat.set(repeat[0], repeat[1]);
-        }
-        tex.needsUpdate = true;
+      return textureFor(id, repeat).then((tex) => {
         material.map = tex;
         material.color.set(0xffffff);
         material.needsUpdate = true;
