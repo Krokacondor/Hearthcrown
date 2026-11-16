@@ -1,0 +1,62 @@
+<h2>Talking to a citizen</h2>
+<p class="subtitle">The box goes to whichever edge keeps the two speakers in view. Portrait on the left, name tag on top, a small bobbing arrow when there's more to read (no key hints). Portraits are placeholders until M2b.</p>
+
+<style>
+  .dlg { position:absolute; left:4%; right:4%; display:flex; gap:12px; align-items:stretch;
+         background:#fffdf8; border:3px solid #3b2a2e; border-radius:14px; padding:10px 12px;
+         box-shadow:0 3px 10px rgb(59 42 46 / .22); font:600 14px/1.35 Nunito, system-ui, sans-serif; color:#3b2a2e; }
+  .dlg.bottom { bottom:5%; } .dlg.top { top:5%; }
+  .por { flex:0 0 74px; height:74px; border:3px solid #3b2a2e; border-radius:10px; background:#cfe3ea; position:relative; overflow:hidden; }
+  .por .head { position:absolute; left:19px; top:12px; width:36px; height:36px; border-radius:50%; background:#f2c9a0; border:3px solid #3b2a2e; }
+  .por .body { position:absolute; left:11px; top:44px; width:52px; height:40px; border-radius:18px 18px 0 0; background:#5d8fd0; border:3px solid #3b2a2e; }
+  .txt { flex:1; position:relative; padding-top:4px; }
+  .name { position:absolute; top:-24px; left:-4px; background:#c8324a; color:#fff2f4; border:3px solid #3b2a2e; border-radius:8px; padding:1px 10px; font:400 15px/1.3 "Lilita One", Nunito, sans-serif; }
+  .more { position:absolute; right:2px; bottom:-2px; font-size:12px; }
+  .stage { position:relative; width:100%; aspect-ratio: 16 / 10; border:3px solid #3b2a2e; border-radius:12px; overflow:hidden; background:#9fcf7c; }
+</style>
+
+<div class="cards">
+  <div class="card" data-choice="bottom" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div class="stage">
+        <svg viewBox="0 0 320 200" width="100%" height="100%" preserveAspectRatio="none" style="position:absolute;inset:0">
+          <rect width="320" height="200" fill="#9fcf7c"/>
+          <path d="M0 70H320V110H0Z" fill="#d1bd96" stroke="#3b2a2e" stroke-width="2"/>
+          <path d="M60 70V40H100V70Z" fill="#f4e3c3" stroke="#3b2a2e" stroke-width="2"/><path d="M55 40L80 22L105 40Z" fill="#d76a4a" stroke="#3b2a2e" stroke-width="2"/>
+          <g transform="translate(150 98)"><rect x="-5" y="-13" width="10" height="13" rx="4" fill="#f59ac0" stroke="#3b2a2e" stroke-width="2"/><circle cy="-18" r="6" fill="#f2c9a0" stroke="#3b2a2e" stroke-width="2"/><path d="M-5 -24l3 -5 2 4 2 -4 3 5z" fill="#f2b233" stroke="#3b2a2e" stroke-width="1.5"/></g>
+          <g transform="translate(172 98)"><rect x="-5" y="-13" width="10" height="13" rx="4" fill="#5d8fd0" stroke="#3b2a2e" stroke-width="2"/><circle cy="-18" r="6" fill="#f2c9a0" stroke="#3b2a2e" stroke-width="2"/></g>
+        </svg>
+        <div class="dlg bottom">
+          <div class="por"><div class="head"></div><div class="body"></div></div>
+          <div class="txt"><span class="name">Wren</span>I appreciate you, your highness. I hope our town gets bustling soon, because there's nothing to do right now...<span class="more">&#9660;</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>Speakers high on screen: box at the bottom</h3>
+      <p>The usual case, since the camera follows her up close and she sits a little above centre.</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="top" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div class="stage">
+        <svg viewBox="0 0 320 200" width="100%" height="100%" preserveAspectRatio="none" style="position:absolute;inset:0">
+          <rect width="320" height="200" fill="#9fcf7c"/>
+          <path d="M0 130H320V170H0Z" fill="#d1bd96" stroke="#3b2a2e" stroke-width="2"/>
+          <path d="M220 130V100H260V130Z" fill="#f4e3c3" stroke="#3b2a2e" stroke-width="2"/><path d="M215 100L240 82L265 100Z" fill="#6aa457" stroke="#3b2a2e" stroke-width="2"/>
+          <g transform="translate(140 160)"><rect x="-5" y="-13" width="10" height="13" rx="4" fill="#f59ac0" stroke="#3b2a2e" stroke-width="2"/><circle cy="-18" r="6" fill="#f2c9a0" stroke="#3b2a2e" stroke-width="2"/><path d="M-5 -24l3 -5 2 4 2 -4 3 5z" fill="#f2b233" stroke="#3b2a2e" stroke-width="1.5"/></g>
+          <g transform="translate(162 160)"><rect x="-5" y="-13" width="10" height="13" rx="4" fill="#5d8fd0" stroke="#3b2a2e" stroke-width="2"/><circle cy="-18" r="6" fill="#f2c9a0" stroke="#3b2a2e" stroke-width="2"/></g>
+        </svg>
+        <div class="dlg top" style="top:8%">
+          <div class="por"><div class="head"></div><div class="body"></div></div>
+          <div class="txt" style="padding-top:18px"><span class="name" style="top:-2px">Wren</span>It's so quiet. Even the birds seem bored.<span class="more">&#9660;</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>Speakers low on screen: box at the top</h3>
+      <p>When the camera angle puts them in the lower half (near the screen edge or the walls), the box flips up so it never covers them.</p>
+    </div>
+  </div>
+</div>

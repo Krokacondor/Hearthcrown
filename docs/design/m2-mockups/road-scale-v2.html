@@ -1,0 +1,76 @@
+<h2>Wide roads, houses as they are, people sized to the houses</h2>
+<p class="subtitle">Both keep today's cottage (1 square) and make roads 2 squares wide, like C. They differ only in how big people are next to the cottage. Same zoom as before; grey lines are the build grid.</p>
+
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <g id="p-top-s"><circle r="5.5" fill="#f2c9a0" stroke="#3b2a2e" stroke-width="2"/></g>
+    <g id="p-top-m"><circle r="7.5" fill="#f2c9a0" stroke="#3b2a2e" stroke-width="2.5"/></g>
+    <g id="p-side-s">
+      <rect x="-4.5" y="-11" width="9" height="11" rx="3.5" fill="#5d8fd0" stroke="#3b2a2e" stroke-width="2"/>
+      <circle cx="0" cy="-15.5" r="5.5" fill="#f2c9a0" stroke="#3b2a2e" stroke-width="2"/>
+    </g>
+    <g id="p-side-s2">
+      <rect x="-4.5" y="-11" width="9" height="11" rx="3.5" fill="#c8324a" stroke="#3b2a2e" stroke-width="2"/>
+      <circle cx="0" cy="-15.5" r="5.5" fill="#f2c9a0" stroke="#3b2a2e" stroke-width="2"/>
+    </g>
+    <g id="p-side-m">
+      <rect x="-6" y="-14" width="12" height="14" rx="5" fill="#5d8fd0" stroke="#3b2a2e" stroke-width="2.5"/>
+      <circle cx="0" cy="-20.5" r="7.5" fill="#f2c9a0" stroke="#3b2a2e" stroke-width="2.5"/>
+    </g>
+    <g id="p-side-m2">
+      <rect x="-6" y="-14" width="12" height="14" rx="5" fill="#c8324a" stroke="#3b2a2e" stroke-width="2.5"/>
+      <circle cx="0" cy="-20.5" r="7.5" fill="#f2c9a0" stroke="#3b2a2e" stroke-width="2.5"/>
+    </g>
+    <g id="grid2">
+      <rect width="300" height="200" fill="#9fcf7c"/>
+      <path stroke="#7fb15f" stroke-width="1" d="M30 0V200M60 0V200M90 0V200M120 0V200M150 0V200M180 0V200M210 0V200M240 0V200M270 0V200M0 30H300M0 60H300M0 90H300M0 120H300M0 150H300M0 180H300"/>
+      <rect x="0" y="120" width="300" height="60" fill="#d1bd96" stroke="#3b2a2e" stroke-width="3"/>
+      <rect x="135" y="90" width="30" height="30" fill="#f4e3c3" stroke="#3b2a2e" stroke-width="3"/>
+      <rect x="145" y="110" width="10" height="10" fill="#8a5a3c" stroke="#3b2a2e" stroke-width="2"/>
+      <rect x="60" y="60" width="60" height="30" fill="#eadbc3" stroke="#3b2a2e" stroke-width="3"/>
+      <rect x="195" y="60" width="60" height="60" fill="#f1e7d6" stroke="#3b2a2e" stroke-width="3"/>
+      <rect y="200" width="300" height="130" fill="#cfe3ea"/>
+      <rect x="0" y="300" width="300" height="30" fill="#d1bd96" stroke="#3b2a2e" stroke-width="3"/>
+      <path d="M135 300V270H165V300Z" fill="#f4e3c3" stroke="#3b2a2e" stroke-width="3"/>
+      <path d="M131 270L150 256L169 270Z" fill="#d76a4a" stroke="#3b2a2e" stroke-width="3"/>
+      <rect x="145" y="285" width="10" height="15" rx="4" fill="#8a5a3c" stroke="#3b2a2e" stroke-width="2"/>
+      <path d="M195 300V255H255V300Z" fill="#f1e7d6" stroke="#3b2a2e" stroke-width="3"/>
+      <path d="M190 255L225 232L260 255Z" fill="#6aa457" stroke="#3b2a2e" stroke-width="3"/>
+      <rect x="219" y="284" width="12" height="16" rx="5" fill="#7a4a3c" stroke="#3b2a2e" stroke-width="2"/>
+    </g>
+  </defs>
+</svg>
+
+<div class="cards">
+  <div class="card" data-choice="d" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <svg viewBox="0 0 300 330" width="100%">
+        <use href="#grid2"/>
+        <use href="#p-top-s" x="40" y="133"/><use href="#p-top-s" x="70" y="166"/>
+        <use href="#p-top-s" x="200" y="140"/><use href="#p-top-s" x="250" y="160"/>
+        <use href="#p-side-s" x="60" y="300"/><use href="#p-side-s2" x="100" y="300"/>
+        <use href="#p-side-s" x="180" y="300"/>
+      </svg>
+    </div>
+    <div class="card-body">
+      <h3>D. True-to-house people</h3>
+      <p>A person stands about two thirds as tall as a cottage wall, the door is just above head height. Four or five people fit across a road. On the full town view people are small, so you'd zoom in to watch them (the camera follows the princess up close in M2).</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="e" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <svg viewBox="0 0 300 330" width="100%">
+        <use href="#grid2"/>
+        <use href="#p-top-m" x="40" y="135"/><use href="#p-top-m" x="75" y="164"/>
+        <use href="#p-top-m" x="205" y="142"/><use href="#p-top-m" x="250" y="160"/>
+        <use href="#p-side-m" x="60" y="300"/><use href="#p-side-m2" x="105" y="300"/>
+        <use href="#p-side-m" x="185" y="300"/>
+      </svg>
+    </div>
+    <div class="card-body">
+      <h3>E. Slightly bigger storybook people</h3>
+      <p>People are a little chunkier, about as tall as the cottage wall, so they read better from a distance. Three or four fit across a road, still with plenty of room to pass.</p>
+    </div>
+  </div>
+</div>
