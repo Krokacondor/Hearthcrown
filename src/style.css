@@ -60,6 +60,9 @@ html, body {
   pointer-events: none;
 }
 
+/* While placing, the marigold footprint is the 'right now' signal, so the map's focus frame steps aside. */
+#map.is-placing:focus-visible::after { display: none; }
+
 /* The pelmet: a red valance with a scalloped hem across the top of the stage. */
 .pelmet {
   position: fixed;

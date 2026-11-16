@@ -82,6 +82,7 @@ export function installBuildMode(deps: BuildModeDeps): BuildMode {
     openBtn.setAttribute("aria-expanded", "true");
     view.hideGhost();
     view.setGridVisible(false);
+    map.classList.remove("is-placing");
     (rows[items.indexOf(item)] ?? rows[0])?.focus({ preventScroll: true });
   }
   function closeAll(): void {
@@ -91,6 +92,7 @@ export function installBuildMode(deps: BuildModeDeps): BuildMode {
     openBtn.setAttribute("aria-expanded", "false");
     view.hideGhost();
     view.setGridVisible(false);
+    map.classList.remove("is-placing");
     enterHeld = false;
     map.focus({ preventScroll: true });
   }
@@ -115,6 +117,7 @@ export function installBuildMode(deps: BuildModeDeps): BuildMode {
     hl = nearestFit(from, (s) => check(s).ok, width, depth) ?? from;
     deps.followTo(hl.x + 0.5, hl.z + 0.5);
     view.setGridVisible(true);
+    map.classList.add("is-placing");
     refresh();
     map.focus({ preventScroll: true });
   }
