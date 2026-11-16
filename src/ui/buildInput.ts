@@ -1,6 +1,6 @@
 // Pure build-mode input logic: keys, camera-relative moves, road strokes and two-tap placing on phones.
 import { screenToWorld } from "../render/camera";
-import type { Rot, Square } from "../sim/townMap";
+import { cellOf, cellSquares, type Rot, type Square, type TownMap } from "../sim/townMap";
 import { actionFor } from "./bindings";
 
 export type Arrow = "up" | "down" | "left" | "right";
@@ -55,6 +55,18 @@ export function strokeSquares(from: Square, to: Square): Square[] {
     out.push({ x, z });
   }
   return out;
+}
+
+/** The first (north-west) square of the 2×2 road cell holding `s`. Road highlights always sit on one. */
+export function snapToCell(map: TownMap, s: Square): Square {
+  return cellSquares(map, cellOf(map, s.x, s.z))[0]!;
+}
+
+/** Like strokeSquares, but over whole road cells: the corners of the cells after `from`'s, up to `to`'s. */
+export function strokeCells(map: TownMap, from: Square, to: Square): Square[] {
+  const a = cellOf(map, from.x, from.z), b = cellOf(map, to.x, to.z);
+  return strokeSquares({ x: a.cx, z: a.cz }, { x: b.cx, z: b.cz })
+    .map((c) => cellSquares(map, { cx: c.x, cz: c.z })[0]!);
 }
 
 export interface TapState { armed: Square | null }

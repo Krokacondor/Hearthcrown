@@ -5,13 +5,14 @@ export interface MenuItem {
   /** "road" or a building id. */
   id: string;
   name: string;
-  /** Footprint for buildings; null for Road. */
-  size: [number, number] | null;
+  /** Footprint in squares (a road piece is 2×2). */
+  size: [number, number];
 }
 
 /** Road first, then every building marked for the Build menu, in data order. */
 export function menuItems(defs: ReadonlyMap<string, BuildingDef>): MenuItem[] {
-  const items: MenuItem[] = [{ id: "road", name: "Road", size: null }];
+  // A road piece is one 2×2 road cell.
+  const items: MenuItem[] = [{ id: "road", name: "Road", size: [2, 2] }];
   for (const def of defs.values()) if (def.inBuildMenu) items.push({ id: def.id, name: def.name, size: [...def.size] });
   return items;
 }

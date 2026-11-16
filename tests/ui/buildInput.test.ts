@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { arrowStep, buildKeyFor, clampToBoard, contextMenuIsBack, nearestFit, releaseTouch, strokeSquares, tap, turnRot, type Arrow } from "../../src/ui/buildInput";
+import mapJson from "../../src/data/map.json";
+import { loadTownMap } from "../../src/sim/townMap";
+import { arrowStep, buildKeyFor, clampToBoard, contextMenuIsBack, nearestFit, releaseTouch, snapToCell, strokeCells, strokeSquares, tap, turnRot, type Arrow } from "../../src/ui/buildInput";
 
 describe("buildKeyFor", () => {
   it("maps arrows and WASD to moves", () => {
@@ -121,5 +123,25 @@ describe("contextMenuIsBack", () => {
   it("is not Back for a long press on a touch screen", () => {
     expect(contextMenuIsBack("touch", false)).toBe(false);
     expect(contextMenuIsBack("mouse", true)).toBe(false);
+  });
+});
+
+describe("road cells in build mode", () => {
+  const map = loadTownMap(mapJson);
+  it("snaps any square to its cell corner", () => {
+    expect(snapToCell(map, { x: 14, z: 4 })).toEqual({ x: 13, z: 3 });
+    expect(snapToCell(map, { x: 13, z: 3 })).toEqual({ x: 13, z: 3 });
+    expect(snapToCell(map, { x: 34, z: 20 })).toEqual({ x: 33, z: 19 });
+  });
+  it("strokes whole cells with no gaps", () => {
+    expect(strokeCells(map, { x: 13, z: 3 }, { x: 18, z: 4 })).toEqual([{ x: 15, z: 3 }, { x: 17, z: 3 }]);
+    const diag = strokeCells(map, { x: 13, z: 3 }, { x: 18, z: 8 });
+    expect(diag).toHaveLength(4);
+    let prev = { x: 13, z: 3 };
+    for (const c of diag) {
+      expect(Math.abs(c.x - prev.x) + Math.abs(c.z - prev.z)).toBe(2);
+      prev = c;
+    }
+    expect(strokeCells(map, { x: 13, z: 3 }, { x: 14, z: 4 })).toEqual([]);
   });
 });

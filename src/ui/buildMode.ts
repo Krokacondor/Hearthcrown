@@ -3,9 +3,9 @@
 import type { DioramaView } from "../render/scene";
 import { footprint } from "../sim/buildings";
 import type { Game } from "../sim/game";
-import type { Rot, Square } from "../sim/townMap";
+import { cellOf, cellSquares, type Rot, type Square } from "../sim/townMap";
 import { actionFor } from "./bindings";
-import { arrowStep, buildKeyFor, clampToBoard, contextMenuIsBack, nearestFit, releaseTouch, strokeSquares, turnRot, type TapState } from "./buildInput";
+import { arrowStep, buildKeyFor, clampToBoard, contextMenuIsBack, nearestFit, releaseTouch, snapToCell, strokeCells, turnRot, type TapState } from "./buildInput";
 import { menuItems, moveSelection, trayStatus, type MenuItem } from "./buildMenu";
 
 export interface BuildModeDeps {
@@ -33,7 +33,7 @@ const el = <T extends HTMLElement>(sel: string): T => {
   return found;
 };
 const same = (a: Square | null, b: Square | null): boolean => !!a && !!b && a.x === b.x && a.z === b.z;
-const sizeText = (item: MenuItem): string => (item.size ? `${item.size[0]}×${item.size[1]}` : "1×1");
+const sizeText = (item: MenuItem): string => `${item.size[0]}×${item.size[1]}`;
 
 export function installBuildMode(deps: BuildModeDeps): BuildMode {
   const { game, view, map } = deps;
@@ -114,8 +114,10 @@ export function installBuildMode(deps: BuildModeDeps): BuildMode {
     const t = deps.cameraTarget();
     const from = clampToBoard({ x: Math.floor(t.x), z: Math.floor(t.z) }, width, depth);
     // Open on the nearest spot that fits, so placing never starts on a red verdict when a green one is close.
-    hl = nearestFit(from, (s) => check(s).ok, width, depth) ?? from;
-    deps.followTo(hl.x + 0.5, hl.z + 0.5);
+    // Roads sit on whole road cells, so only a cell's first square is a candidate.
+    const fits = (s: Square): boolean => (it.id !== "road" || same(s, snapToCell(game.town.map, s))) && check(s).ok;
+    hl = snap(nearestFit(from, fits, width, depth) ?? from);
+    deps.followTo(...centerOf(hl));
     view.setGridVisible(true);
     map.classList.add("is-placing");
     refresh();
@@ -152,10 +154,18 @@ export function installBuildMode(deps: BuildModeDeps): BuildMode {
     }
     refresh();
   }
+  /** Road highlights snap to the first square of their road cell; buildings keep any square. */
+  function snap(s: Square): Square {
+    return item.id === "road" ? snapToCell(game.town.map, s) : s;
+  }
+  /** Where the camera looks for the highlight: a square's middle, or a road cell's middle. */
+  function centerOf(s: Square): [number, number] {
+    return item.id === "road" ? [s.x + 1, s.z + 1] : [s.x + 0.5, s.z + 0.5];
+  }
   function moveTo(s: Square, follow: boolean): void {
-    hl = clampToBoard(s, width, depth);
+    hl = snap(clampToBoard(s, width, depth));
     justBuilt = null;
-    if (follow) deps.followTo(hl.x + 0.5, hl.z + 0.5);
+    if (follow) deps.followTo(...centerOf(hl));
     if (enterHeld && item.id === "road") roadAt(hl);
     refresh();
   }
@@ -186,7 +196,9 @@ export function installBuildMode(deps: BuildModeDeps): BuildMode {
     e.preventDefault();
     if (k.kind === "move") {
       const { dx, dz } = arrowStep(k.dir, deps.cameraStep());
-      moveTo({ x: hl.x + dx, z: hl.z + dz }, true);
+      // Roads move a whole road cell (2 squares) at a time.
+      const n = item.id === "road" ? 2 : 1;
+      moveTo({ x: hl.x + dx * n, z: hl.z + dz * n }, true);
     } else if (k.kind === "turn") {
       if (item.id !== "road") { rot = turnRot(rot); justBuilt = null; refresh(); }
     } else if (k.kind === "place") {
@@ -231,7 +243,7 @@ export function installBuildMode(deps: BuildModeDeps): BuildMode {
     }
     if (e.button !== 0 || !sq) return;
     mouseDown = sq;
-    hl = sq;
+    hl = snap(sq);
     justBuilt = null;
     if (item.id === "road") { painting = true; roadAt(sq); }
     refresh();
@@ -244,19 +256,19 @@ export function installBuildMode(deps: BuildModeDeps): BuildMode {
       if (!touch || touch.id !== e.pointerId || touch.cancelled || fingers !== 1 || same(sq, touch.last)) return;
       if (item.id === "road") {
         if (!touch.painting) { touch.painting = true; roadAt(touch.start); }
-        for (const s of strokeSquares(touch.last, sq)) roadAt(s);
+        for (const s of strokeCells(game.town.map, touch.last, sq)) roadAt(s);
       }
       touch.last = sq;
       touch.moved = true;
-      hl = sq;
+      hl = snap(sq);
       if (!touch.painting) justBuilt = null;
       refresh();
       return;
     }
-    if (same(sq, hl)) return;
+    if (same(snap(sq), hl)) return;
     if (painting && (e.buttons & 1)) {
-      for (const s of strokeSquares(hl, sq)) roadAt(s);
-      hl = sq;
+      for (const s of strokeCells(game.town.map, hl, sq)) roadAt(s);
+      hl = snap(sq);
       refresh();
     } else {
       moveTo(sq, false);
@@ -271,7 +283,7 @@ export function installBuildMode(deps: BuildModeDeps): BuildMode {
       if (e.type === "pointercancel" || t.cancelled || t.painting || mode !== "placing") return;
       const r = releaseTouch(taps, t.last, t.moved);
       taps = r.state;
-      if (r.place && same(hl, t.last)) place();
+      if (r.place && same(hl, snap(t.last))) place();
       else moveTo(t.last, true); // after the finger lifts, the camera glides to the preview
       return;
     }
@@ -289,7 +301,7 @@ export function installBuildMode(deps: BuildModeDeps): BuildMode {
     focusSquares() {
       if (mode !== "placing") return null;
       const def = item.id === "road" ? undefined : game.town.defs.get(item.id);
-      return def ? footprint(def, hl.x, hl.z, rot).cells : [hl];
+      return def ? footprint(def, hl.x, hl.z, rot).cells : cellSquares(game.town.map, cellOf(game.town.map, hl.x, hl.z));
     },
   };
 }

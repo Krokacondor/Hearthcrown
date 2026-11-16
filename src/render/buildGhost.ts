@@ -5,7 +5,7 @@ import { LineMaterial } from "three/addons/lines/LineMaterial.js";
 import { LineSegments2 } from "three/addons/lines/LineSegments2.js";
 import { LineSegmentsGeometry } from "three/addons/lines/LineSegmentsGeometry.js";
 import { footprint } from "../sim/buildings";
-import type { Rot, Square } from "../sim/townMap";
+import { cellOf, cellSquares, type Rot, type Square } from "../sim/townMap";
 import type { Town } from "../sim/world";
 import type { ArtTextures } from "./art/textures";
 import { createPaperBuilding, placeOnFootprint } from "./papercraft";
@@ -82,7 +82,8 @@ export function createBuildGhost(town: Town, art: ArtTextures, ink: LineMaterial
       let doorFront: Square[] = [];
       if (shownGhost) { group.remove(shownGhost); shownGhost = null; }
       if (item.kind === "road") {
-        cells = [at];
+        // A road piece is a whole 2×2 road cell; `at` is its first square.
+        cells = cellSquares(town.map, cellOf(town.map, at.x, at.z));
       } else {
         const def = town.defs.get(item.type);
         if (!def) { group.visible = false; return; }

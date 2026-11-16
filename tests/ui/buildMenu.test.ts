@@ -7,7 +7,7 @@ describe("menuItems", () => {
   it("lists Road first, then the buildings in the menu, without the castle", () => {
     const items = menuItems(loadBuildingDefs(buildingsJson));
     expect(items.map((i) => i.name)).toEqual(["Road", "Cottage", "Family Home", "Manor", "Adventurers' Lodge"]);
-    expect(items[0]).toEqual({ id: "road", name: "Road", size: null });
+    expect(items[0]).toEqual({ id: "road", name: "Road", size: [2, 2] });
     expect(items[4]).toEqual({ id: "lodge", name: "Adventurers' Lodge", size: [3, 2] });
   });
 });
