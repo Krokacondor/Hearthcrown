@@ -1,5 +1,7 @@
 import * as THREE from "three";
 import balance from "../data/balance.json";
+import mapJson from "../data/map.json";
+import { loadTownMap } from "../sim/townMap";
 import { cameraPose, type CameraState } from "./camera";
 import { createGround } from "./ground";
 import { palette } from "./palette";
@@ -23,15 +25,20 @@ export function createDiorama(container: HTMLElement): DioramaView | null {
   renderer.domElement.setAttribute("aria-hidden", "true");
   container.append(renderer.domElement);
 
-  const { widthTiles, depthTiles } = balance.map;
+  const { width: widthTiles, depth: depthTiles } = loadTownMap(mapJson);
+  const cx = widthTiles / 2, cz = depthTiles / 2;
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(palette.sky);
   const ground = createGround(widthTiles, depthTiles, renderer.capabilities.getMaxAnisotropy());
+  // Square (x, z) covers world [x, x+1] x [z, z+1], so the board's corner sits at the origin.
+  ground.group.position.set(cx, 0, cz);
   scene.add(ground.group);
 
   scene.add(new THREE.AmbientLight(0xffffff, 2.1));
   const sun = new THREE.DirectionalLight(0xffffff, 1.35);
-  sun.position.set(-10, 20, 12);
+  sun.position.set(cx - 10, 20, cz + 12);
+  sun.target.position.set(cx, 0, cz);
+  scene.add(sun.target);
   sun.castShadow = true;
   sun.shadow.mapSize.set(2048, 2048);
   sun.shadow.bias = -0.0006;
