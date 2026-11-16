@@ -429,6 +429,7 @@ Rules:
 - Nothing is hover-only. Anything shown on hover also shows on tap and through the keyboard.
 - **Back** goes up one level at a time. With nothing open it does nothing, so it never quits the game or loses progress.
 - Every focusable UI element shows a clear keyboard focus state.
+- **No key hints on screen.** Every key comes from one bindings table (`data/keybindings.json`). A **Settings** menu lists all controls and lets the player rebind keys (M18).
 - Every milestone's browser check also exercises its new features with the keyboard alone.
 - The camera follows the princess (or the build highlight in build mode). Right-click stays reserved for Back, so the mouse never turns the camera by dragging.
 - **Camera turning is a PC extra.** Phones keep the default angle, so nothing in the game may require turning. The one exception to "every action works in all three schemes".
@@ -464,7 +465,7 @@ Build in this order. Each milestone ends with the game running in the browser, t
 | M15 | Story & masters | Chapters, scenes, unlocks, masters stationed at buildings. |
 | M16 | Princess buildings & town | Gambling Hall mini-games and taxes, Royal Garden (appointments, meetups, dates), princess wardrobe, makeover building, remaining buildings. |
 | M17 | Research, aging, ending | Research lines, storybook aging, retirement and delays, settling down and children, ending (statue), score screen, continuing after the ending. |
-| M18 | Save/load & polish | Versioned saves, overlays, tooltips, settings. Installable web app (5.2). |
+| M18 | Save/load & polish | Versioned saves, overlays, tooltips, settings (including a key bindings screen to view and rebind every key). Installable web app (5.2). |
 | M19 | Balance pass | Headless sim runs 300 days with a scripted player and prints gold, Emberstone, levels, bonds, styles, clears, retirements and births. Tune JSON so the story lands in 200–300 days. Check pillar 9: a full end-game town (every building) fits with room to spare, and adventurers' walks to the gates stay short. |
 | M20 | New Game+ & post-game | New Game+ carryovers (4.22), villain faces, reincarnation cutscene, post-game content hooks. |
 
