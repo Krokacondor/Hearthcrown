@@ -15,6 +15,8 @@ export interface Princess {
   height: number;
   /** Points to walk through (click or tap to walk), in order. Empty when she isn't following one. */
   route: { x: number; z: number }[];
+  /** Someone she is walking over to talk to (tap a person), or null. */
+  talkTo: number | null;
 }
 
 /** A ground direction of length 0 or 1, already turned from screen to world by the UI. */
@@ -22,10 +24,10 @@ export interface WalkInput { x: number; z: number; sprint: boolean }
 
 export function startPrincess(town: Town): Princess {
   const s = town.map.princessStart;
-  return { x: s.x, z: s.z, facing: { x: 0, z: 1 }, sprinting: false, height: 0, route: [] };
+  return { x: s.x, z: s.z, facing: { x: 0, z: 1 }, sprinting: false, height: 0, route: [], talkTo: null };
 }
 
-interface Box { x0: number; z0: number; x1: number; z1: number }
+export interface Box { x0: number; z0: number; x1: number; z1: number }
 const EPS = 1e-9;
 const STATUE_HALF = 0.35;
 const BOARD_HALF = { x: 0.45, z: 0.2 };
@@ -39,6 +41,24 @@ export function isSolidSquare(town: Town, world: World, x: number, z: number, ta
   return (taken ?? occupied(town, world)).has(`${x},${z}`);
 }
 
+/** The standing props she bumps into: the statue and the quest board. */
+export function propBoxes(town: Town): Box[] {
+  const { statue, questBoard } = town.map;
+  return [
+    { x0: statue.x - STATUE_HALF, z0: statue.z - STATUE_HALF, x1: statue.x + STATUE_HALF, z1: statue.z + STATUE_HALF },
+    { x0: questBoard.x - BOARD_HALF.x, z0: questBoard.z - BOARD_HALF.z, x1: questBoard.x + BOARD_HALF.x, z1: questBoard.z + BOARD_HALF.z },
+  ];
+}
+
+/** Keys of the squares a prop stands on (any overlap), which a walking route must step around. */
+export function propSquares(town: Town): Set<string> {
+  const out = new Set<string>();
+  for (const b of propBoxes(town)) {
+    for (let z = Math.floor(b.z0); z < Math.ceil(b.z1); z++) for (let x = Math.floor(b.x0); x < Math.ceil(b.x1); x++) out.add(`${x},${z}`);
+  }
+  return out;
+}
+
 /** Solid boxes a circle at (x, z) with this radius could touch: nearby solid squares plus the props. */
 function solidsNear(town: Town, world: World, x: number, z: number, radius: number, taken: Set<string>): Box[] {
   const out: Box[] = [];
@@ -47,9 +67,7 @@ function solidsNear(town: Town, world: World, x: number, z: number, radius: numb
       if (isSolidSquare(town, world, sx, sz, taken)) out.push({ x0: sx, z0: sz, x1: sx + 1, z1: sz + 1 });
     }
   }
-  const { statue, questBoard } = town.map;
-  out.push({ x0: statue.x - STATUE_HALF, z0: statue.z - STATUE_HALF, x1: statue.x + STATUE_HALF, z1: statue.z + STATUE_HALF });
-  out.push({ x0: questBoard.x - BOARD_HALF.x, z0: questBoard.z - BOARD_HALF.z, x1: questBoard.x + BOARD_HALF.x, z1: questBoard.z + BOARD_HALF.z });
+  out.push(...propBoxes(town));
   return out;
 }
 
@@ -94,6 +112,7 @@ export function stepPrincess(town: Town, world: World, dt: number): void {
 
   if (input.x !== 0 || input.z !== 0) {
     p.route = [];
+    p.talkTo = null;
     dir = { x: input.x, z: input.z };
   } else {
     while (p.route.length > 0 && Math.hypot(p.route[0]!.x - p.x, p.route[0]!.z - p.z) <= ARRIVE) p.route.shift();

@@ -13,7 +13,11 @@ describe("game", () => {
       buildings: 1,
       roads: 27,
       citizens: 7,
+      housed: 0,
       adventurers: 0,
+      princess: { x: 34, z: 8, sprinting: false },
+      dialogueOpen: false,
+      talkTarget: null,
     });
   });
 
@@ -158,3 +162,108 @@ describe("game", () => {
   });
 });
 
+
+describe("walking and talking commands", () => {
+  const state = (g: ReturnType<typeof createGame>) => JSON.stringify(g.world);
+
+  it("refuses bad input with a reason and changes nothing", () => {
+    const g = createGame(4);
+    const before = state(g);
+    const bad: [string, Record<string, unknown> | undefined, RegExp][] = [
+      ["setWalkInput", { x: "a", z: 0 }, /setWalkInput/],
+      ["setWalkInput", { x: NaN, z: 0 }, /setWalkInput/],
+      ["advance", { seconds: -1 }, /advance/],
+      ["advance", { seconds: 11 }, /advance/],
+      ["advance", {}, /advance/],
+      ["teleportPrincess", { x: 12.5, z: 10.5 }, /That spot is blocked/],
+      ["teleportPrincess", { x: "1", z: 2 }, /teleportPrincess/],
+      ["advanceDialogue", undefined, /No one is talking/],
+      ["walkTo", { x: -5, z: 1 }, /walkTo/],
+      ["walkToPerson", { id: 99 }, /No one by that name/],
+      ["talk", undefined, /Nobody to talk to/],
+    ];
+    for (const [name, args, msg] of bad) {
+      const r = g.command(name, args);
+      expect(r.ok, name).toBe(false);
+      if (!r.ok) expect(r.error, name).toMatch(msg);
+    }
+    expect(state(g)).toBe(before);
+  });
+
+  it("keeps her inside the town through one huge advance", () => {
+    const g = createGame(4);
+    expect(g.command("teleportPrincess", { x: 12.5, z: 20 }).ok).toBe(true);
+    g.command("setWalkInput", { x: -1, z: 0, sprint: true });
+    g.command("advance", { seconds: 10 });
+    expect(g.snapshot().princess.x).toBeGreaterThanOrEqual(12.25 - 1e-9);
+  });
+
+  it("moves her out of the way when a building is placed on her", () => {
+    const g = createGame(4);
+    g.command("teleportPrincess", { x: 25.5, z: 18.5 });
+    expect(g.command("placeBuilding", { type: "cottage", x: 25, z: 18, rot: 0 })).toEqual({ ok: true });
+    const { x, z } = g.snapshot().princess;
+    expect(Math.floor(x) === 25 && Math.floor(z) === 18).toBe(false);
+    expect(Math.hypot(x - 25.5, z - 19.5)).toBeLessThanOrEqual(1);
+  });
+
+  it("gives the same game for the same seed and the same commands", () => {
+    const play = () => {
+      const g = createGame(9);
+      for (const x of [16, 18, 20]) g.command("placeBuilding", { type: "cottage", x, z: 18, rot: 0 });
+      g.command("placeRoad", { x: 22, z: 17 });
+      g.command("setWalkInput", { x: 0, z: 1, sprint: false });
+      g.command("advance", { seconds: 5 });
+      g.command("setWalkInput", { x: 0, z: 0 });
+      g.command("walkTo", { x: 25, z: 25 });
+      for (let i = 0; i < 55; i++) g.command("advance", { seconds: 1 });
+      return JSON.stringify({ people: g.world.people, princess: g.world.princess });
+    };
+    expect(play()).toBe(play());
+  });
+
+  it("houses citizens as homes are placed", () => {
+    const g = createGame(4);
+    for (const x of [16, 18, 20]) g.command("placeBuilding", { type: "cottage", x, z: 18, rot: 0 });
+    expect(g.snapshot().housed).toBe(6);
+  });
+
+  it("talks to the nearest person and closes the dialogue", () => {
+    const g = createGame(4);
+    const p = g.world.people[0]!;
+    g.command("teleportPrincess", { x: p.x, z: p.z - 1 });
+    expect(g.snapshot().talkTarget).toBe(p.id);
+    expect(g.command("talk")).toEqual({ ok: true });
+    expect(g.snapshot().dialogueOpen).toBe(true);
+    g.command("setWalkInput", { x: 1, z: 0 });
+    g.command("advance", { seconds: 1 });
+    expect(g.snapshot().princess.x).toBeCloseTo(p.x, 5);
+    expect(g.command("advanceDialogue")).toEqual({ ok: true });
+    expect(g.snapshot().dialogueOpen).toBe(false);
+  });
+
+  it("walks to a person and talks when she gets there", () => {
+    const g = createGame(4);
+    expect(g.command("walkToPerson", { id: 3 })).toEqual({ ok: true });
+    for (let i = 0; i < 20 && !g.snapshot().dialogueOpen; i++) g.command("advance", { seconds: 1 });
+    expect(g.snapshot().dialogueOpen).toBe(true);
+    expect(g.world.dialogue?.personId).toBe(3);
+  });
+
+  it("drops a click-to-walk route when a key is pressed", () => {
+    const g = createGame(4);
+    expect(g.command("walkTo", { x: 20, z: 12 })).toEqual({ ok: true });
+    expect(g.world.princess.route.length).toBeGreaterThan(0);
+    g.command("setWalkInput", { x: 0, z: 1 });
+    g.command("advance", { seconds: 0.1 });
+    expect(g.world.princess.route).toEqual([]);
+  });
+
+  it("reports the princess and the townsfolk in the snapshot", () => {
+    const s = createGame(4).snapshot();
+    expect(s.princess).toEqual({ x: 34, z: 8, sprinting: false });
+    expect(s.housed).toBe(0);
+    expect(s.dialogueOpen).toBe(false);
+    expect(s.talkTarget).toBeNull();
+  });
+});

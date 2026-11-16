@@ -1,17 +1,19 @@
 // Click or tap to walk (PLAN.md 4.2): the princess's route over open ground, around buildings and walls.
 // Separate from the road pathfinder: she can walk on grass, townsfolk can't.
 import { occupied } from "./grid";
-import { isSolidSquare } from "./princess";
+import { isSolidSquare, propSquares } from "./princess";
 import { inBoard, type Square } from "./townMap";
 import type { Town, World } from "./world";
 
 const SIDE: readonly [number, number][] = [[1, 0], [-1, 0], [0, 1], [0, -1]];
 const DIAG: readonly [number, number][] = [[1, 1], [-1, 1], [1, -1], [-1, -1]];
 
-/** The free square closest to `target` (breadth first: east, west, south, north), or null if none on the board. */
+/** The free square (no wall, building or prop) closest to `target` (breadth first: east, west, south, north), or null if none on the board. */
 export function nearestFreeSquare(town: Town, world: World, target: Square): Square | null {
   const taken = occupied(town, world);
-  const free = (s: Square): boolean => inBoard(town.map, s.x, s.z) && !isSolidSquare(town, world, s.x, s.z, taken);
+  const props = propSquares(town);
+  const free = (s: Square): boolean =>
+    inBoard(town.map, s.x, s.z) && !isSolidSquare(town, world, s.x, s.z, taken) && !props.has(`${s.x},${s.z}`);
   const start = { x: Math.round(target.x), z: Math.round(target.z) };
   const seen = new Set([`${start.x},${start.z}`]);
   const queue: Square[] = [start];
@@ -34,7 +36,9 @@ export function nearestFreeSquare(town: Town, world: World, target: Square): Squ
  */
 export function findOpenRoute(town: Town, world: World, from: Square, to: Square): Square[] | null {
   const taken = occupied(town, world);
-  const free = (x: number, z: number): boolean => inBoard(town.map, x, z) && !isSolidSquare(town, world, x, z, taken);
+  const props = propSquares(town);
+  const free = (x: number, z: number): boolean =>
+    inBoard(town.map, x, z) && !isSolidSquare(town, world, x, z, taken) && !props.has(`${x},${z}`);
   const goal = free(to.x, to.z) ? to : nearestFreeSquare(town, world, to);
   if (!goal) return null;
   if (from.x === goal.x && from.z === goal.z) return [];

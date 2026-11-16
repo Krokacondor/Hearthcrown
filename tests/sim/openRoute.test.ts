@@ -40,6 +40,14 @@ describe("findOpenRoute", () => {
     expect(isSolidSquare(town, world, end.x, end.z)).toBe(false);
     expect(Math.max(Math.abs(end.x - 22), Math.abs(end.z - 10))).toBe(1);
   });
+  it("goes around the statue and the quest board, not into them", () => {
+    const { town, world } = setup();
+    const under = new Set(["33,19", "34,19", "33,20", "34,20", "35,7"]);
+    for (const [from, to] of [[{ x: 34, z: 17 }, { x: 34, z: 23 }], [{ x: 33, z: 8 }, { x: 36, z: 7 }]] as const) {
+      const r = findOpenRoute(town, world, from, to)!;
+      for (const s of r) expect(under.has(`${s.x},${s.z}`), `${s.x},${s.z}`).toBe(false);
+    }
+  });
   it("ends inside the walls when the target is outside them", () => {
     const { town, world } = setup();
     const r = findOpenRoute(town, world, { x: 15, z: 10 }, { x: 5, z: 10 })!;

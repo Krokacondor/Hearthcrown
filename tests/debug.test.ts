@@ -40,3 +40,20 @@ describe("debug hook change callback", () => {
     expect(changes).toBe(1);
   });
 });
+
+describe("debug hook and walking", () => {
+  it("lists the townsfolk", () => {
+    const list = createDebugHook(createGame(7)).people();
+    expect(list).toHaveLength(7);
+    expect(Object.keys(list[0]!).sort()).toEqual(["home", "id", "name", "role", "state", "x", "z"]);
+  });
+  it("doesn't redraw the town for walking or time passing", () => {
+    let changes = 0;
+    const hook = createDebugHook(createGame(7), () => changes++);
+    hook.cmd("setWalkInput", { x: 1, z: 0 });
+    hook.cmd("advance", { seconds: 1 });
+    expect(changes).toBe(0);
+    hook.cmd("placeBuilding", { type: "cottage", x: 20, z: 18, rot: 0 });
+    expect(changes).toBe(1);
+  });
+});
