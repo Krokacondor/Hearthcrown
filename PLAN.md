@@ -18,6 +18,7 @@ All names, characters, story and art are original. Do not use names, terms or as
 6. **The princess walks her city.** She has time each day to walk around, talk to adventurers, build and upgrade. People also come to her in the Audience Hall.
 7. **Data-driven.** Styles, races, traits, buildings, events, petitions, dungeons and story live in JSON.
 8. **No game over.** Bad choices close doors and slow you down, but the city always keeps running. There is no debt, no collapse and no failure screen.
+9. **Room for everything.** By the end of the game the player can build every single building, with room to spare, without giving up citizens or other buildings to make space. Travel inside town stays short, so adventurers never spend long walking before they leave. Wall sizes, walking speed and gate placement serve this rule, and the M19 balance pass checks it.
 
 ---
 
@@ -44,11 +45,11 @@ Chosen 2026-11-10 after a hands-on test. Reference: `docs/art/world-reference.pn
 - **The map is a tabletop diorama** on a wooden base, seen from above at a fixed tilt.
 - **The camera** follows the princess. The player can **turn it in 45° steps** and zoom. Movement is relative to the camera: "up" always walks away from you.
 - **Buildings are papercraft:** real 3D boxes and roofs whose faces are flat hand-drawn panels (2.1). Turning the camera shows their sides and backs.
-- **Small things are flat cut-outs** that always turn to face the camera: characters, trees, wells, signs, rubble, props.
+- **Small things are flat cut-outs** that always turn to face the camera: characters, trees, signs, the statue, the quest board, props.
 - **Characters have a front and a back.** They show their back when walking away from the camera, and flip like paper when they change direction.
 - **Town walls and towers** are simple solid shapes with ink outlines, matching the drawn style.
 - **Light:** real shadows from a sun, and the light shifts through the day (warm dusk, dim night).
-- **A castle town.** Stone town walls with gatehouses at the three gates (west, south, east), the castle on the north wall, cobbled streets inside the walls, a central plaza with a well and the decree board, and dirt roads leading out of the gates into the fields.
+- **A castle town.** Stone town walls with gatehouses at the three gates (west, south, east), the castle on the north wall, cobbled streets inside the walls, a central plaza with the princess's statue (its empty pedestal once she wakes), the quest board standing in front of the castle, and dirt roads leading out of the gates into the fields. There is no well.
 
 ### Architecture
 
@@ -56,7 +57,9 @@ Chosen 2026-11-10 after a hands-on test. Reference: `docs/art/world-reference.pn
 src/
   sim/              pure simulation, no DOM, deterministic given a seed
     world.ts        World state
-    grid.ts         lots, cells, placement rules
+    townMap.ts      map data: board, wall stages, gates, plaza, castle grounds
+    buildings.ts    building definitions and turned footprints
+    grid.ts         squares, placement and road rules
     paths.ts        road graph + Dijkstra
     time.ts         clock, day phases
     rng.ts          seeded RNG
@@ -97,12 +100,20 @@ One `effects.ts` runner applies them, so new content never needs new code.
 
 ## 3. The city map
 
-- A fixed, hand-made map in `data/map.json`:
-  - **Cells** on a 16 px grid grouped into named **plots**.
-  - **Lots**: every legal placement, with size (1×1, 2×1, 2×2, 3×2), covered cells, door side, and the road segment the door connects to.
-  - **Road graph** with three **gates** (west, south, east) and the **castle**.
-- The game starts with a cleared field: the castle, roads, one decree board, and rubble.
-- Build a simple in-browser **map editor** early so the map can grow without hand-editing JSON.
+- **An open grid.** The player designs the town's layout: any building can go on any free squares that pass the rules. There are no pre-made lots.
+- **`data/map.json`** describes the board and the starting town:
+  - board size (66×48 squares to start; later stages may enlarge it)
+  - **wall stages**: each stage is a wall ring with its three gates (west, south, east). The chapter 1 town is 40×32 squares inside the walls. In later chapters the walls move outward (south, east and west; the castle keeps its place on the north wall) to make room. The game remembers the current stage. When and how each expansion unlocks is decided in a later milestone.
+  - the central plaza with the statue, the castle grounds on the north wall, the quest board square in front of the castle
+  - the citizens' starting roads (cobbled inside the walls, dirt outside the gates) and the starting placements
+- **Placement rules** (in `sim/grid.ts`, tested):
+  - Buildings and roads go only on open squares inside the current walls, and never overlap anything.
+  - Each building can be turned to 4 facings. Its door covers one or more of its front squares (defined per building), and at least one square in front of the door must be road.
+  - The princess lays roads one square at a time. A new road square must touch the existing road network side by side. The plaza and the gates count as road and can never be removed.
+  - **No stranding.** A road square can only be removed if, afterward, every building's door still faces a road and all roads form one network that reaches all three gates and the castle. Otherwise removal is refused with a reason naming what would be cut off. To reroute, lay the new road first, then remove the old one.
+- Townsfolk and adventurers walk only on roads (M2); the princess can walk anywhere.
+- **Starting state:** the citizens' rough town on clean grass: walls, gates, roads, the plaza and the statue. Nothing needs clearing. In the opening (4.3) she builds a house on a spot the player chooses, then the castle. Until the cutscene exists (M15), a new game starts just after it, with the castle and the quest board standing, and the player places the first house.
+- Build a simple in-browser **map editor** early (M2) so the map can grow without hand-editing JSON.
 
 ---
 
@@ -122,7 +133,7 @@ One in-game day ≈ 6 real minutes at 1× (pause, 1×, 2×, 4×).
 5. **Night report**: summary of the day, bond changes, style changes, unlocks, story beats, retirements.
 
 ### 4.2 The princess
-- A walkable character on the map (click to move along roads, or arrow keys).
+- A walkable character on the map (arrow keys, or click/tap a spot). She can walk anywhere; townsfolk and adventurers keep to the roads.
 - During the day she can: talk to anyone with an icon over their head, start construction or upgrades, enter buildings (Audience Hall, Gambling Hall, Library...), and use items on adventurers who are still in town.
 - Walking takes in-game time, so a compact city leaves her more time.
 - **Face to face.** People are only dealt with in person. Talking to an adventurer or citizen, booking a Royal Garden appointment (done at the garden), and using items on an adventurer all require walking to them. Panels such as Adventurers only show information; they never offer "talk" or "book" buttons. The Build menu and Decrees are the menus that act directly.
@@ -130,6 +141,7 @@ One in-game day ≈ 6 real minutes at 1× (pause, 1×, 2×, 4×).
 - **Wardrobe.** She unlocks outfits over the game (story, masters, rare finds, research), each with a perk, e.g. Riding Habit (walks faster), Court Gown (friendlier petitioners), Traveling Cloak (talking fills the morale gauge faster). She changes at the castle. Outfits are art layers (2.1). Details in M16.
 
 ### 4.3 Story
+- **The opening.** Before the princess wakes, a group of citizens has built the town in rough form, but they worry their work will be in vain. The only other thing in town is a statue of the princess. She breaks out of the statue and her magic revitalizes the land. The people are in awe and call her a saint, royalty, maybe the savior they need. With her magic she builds a house on a spot the player chooses (the build tutorial). The people celebrate, and she builds the castle at the top of the town. One citizen offers to help with the day-to-day tasks: her advisor. This mirrors the ending, where she turns back to stone.
 - Told in **chapters** (`data/story.json`). Each chapter has a goal (e.g. "Clear the Mirewood", "Reach 40 citizens"), scenes and rewards.
 - Scenes use a dialogue box with portraits and choices, through the effects system.
 - Chapter goals unlock dungeons, buildings, races, styles and masters. The final chapter ends the game and shows the score.
@@ -241,7 +253,7 @@ More styles can be added in data, including **rare styles** (4.6.3).
 - About 60 events in v1, including chains over several days.
 
 ### 4.11 Parties, bonds and guilds
-- **One building forms parties: the Adventurers' Lodge**, unlocked in chapter 1.
+- **One building forms parties: the Adventurers' Lodge**, unlocked in chapter 1. Until it is built, decrees go on the quest board in front of the castle; once built, the Lodge takes over that job and adventurers look at quests there. Adventurers do not live at the Lodge.
 - **Bonds**: every pair of adventurers has a score (−100 to 100).
   - Gains: runs together, successful clears, covering each other in a fight, shared events, matching traits.
   - Losses: failed runs, injuries blamed on someone, clashing traits, rivalry events.
@@ -269,7 +281,7 @@ More styles can be added in data, including **rare styles** (4.6.3).
 Each building has a size, cost, unlock, max count and upgrade levels in `data/buildings.json`. Daily caps: 10 builds, 5 demolitions.
 
 - **Buildings and upgrades cost Emberstone** (4.18). A few special buildings also cost gold on top (e.g. the Gambling Hall).
-- **Demolish** unlocks early in a first playthrough (chapter 1). New Game+ has it from day one.
+- **Demolish** unlocks early in a first playthrough (chapter 1). New Game+ has it from day one. Demolish also removes roads, under the no-stranding rule (3).
 
 **Homes**: Cottage (1×1, 1 citizen), Family Home (2×1, 3 citizens), Manor (2×2, 6 citizens), and one race home per race (1×1).
 
@@ -277,7 +289,7 @@ Each building has a size, cost, unlock, max count and upgrade levels in `data/bu
 
 | Building | What it does |
 |---|---|
-| Adventurers' Lodge | Forms parties, hosts guild petitions, raises the adventurer cap with upgrades |
+| Adventurers' Lodge | Forms parties, takes over the quest board (adventurers look at quests here), hosts guild petitions, raises the adventurer cap with upgrades. Adventurers don't live here. |
 | Blacksmith, Armorer, Apothecary | Sell gear and potions; research lines |
 | Style buildings: Barracks, Chapel, Mage Tower, Kennel, Fencing Hall, Archery Range, Theater | Teach style skills, research style items, host that style's master |
 | Infirmary | Injured adventurers recover in half the time |
@@ -389,7 +401,7 @@ After the ending, the player can start New Game+: a long age has passed, the cit
 
 ## 5. UI
 
-- **Map view** (the 3D diorama, 2.2) with camera turning and zoom. The princess walks on it. Select a lot to build. Inspect a person (hover, tap, or keyboard) to see name, race, style, mood and known traits.
+- **Map view** (the 3D diorama, 2.2) with camera turning and zoom. The princess walks on it. Pick squares to build on. Inspect a person (hover, tap, or keyboard) to see name, race, style, mood and known traits.
 - **Top bar**: day, chapter, clock, speed, gold, Emberstone, population, morale gauge, reputation.
 - **Panels**: Build, Decrees, Adventurers (stats, traits, bond web; view only, see 4.2 "Face to face"), Guilds, Research, World Map, Inventory (style items and gifts), Story log, Promises.
 - **Dialogs**: morning event, story scenes, audience petitions, conversations, style requests, guild petitions, retirement.
@@ -408,7 +420,7 @@ There are three control schemes for one game. Every action must work in all thre
 | Inspect a person | Interact key or a cycle-targets key | Hover or click | Tap |
 | Open panels | Number keys or a menu key | Click top-bar or side buttons | Tap on-screen buttons |
 | Choose in dialogs and menus | Arrows + Enter | Click | Tap |
-| Build | Arrows move a highlight from lot to lot, Enter places | Click a lot | Tap a lot |
+| Build | Arrows move a highlight square by square, R turns, Enter places (hold to paint roads) | Point and click (hold and drag to paint roads) | Tap to preview, tap again or Place to build (drag to paint roads) |
 | Turn / zoom the camera | Q / E turn 45°, + / − zoom | On-screen turn buttons, scroll wheel | No turning (fixed angle); pinch to zoom |
 | **Back** (leave a menu, go up one level) | **Esc** | Right-click or the on-screen **Back** button | On-screen **Back** button or the phone's back gesture |
 
@@ -435,14 +447,14 @@ Build in this order. Each milestone ends with the game running in the browser, t
 | # | Milestone | Done when |
 |---|---|---|
 | M0 | Scaffold | Vite + TS + Vitest run. Three.js draws the diorama ground with a tile grid; the camera turns and zooms. Seeded RNG tested. `DESIGN.md` created with Impeccable. `window.__hearthcrown` debug hook exists. Playwright opens the page with no console errors. |
-| M1 | Map & placement | Map JSON loads. Lots, roads, town walls and gates draw. Placement follows the rules (tested). Art registry and packs with fallback (2.1) draw ground and papercraft buildings from panels. |
+| M1 | Map & placement | Map JSON loads. Walls, gates, plaza, statue, roads and castle draw. Open-grid placement of buildings and roads follows the rules, including no stranding (tested). Build menu and build mode. Art registry and packs with fallback (2.1) draw ground and papercraft buildings from panels. |
 | M2 | Paths, walkers, princess | Dijkstra tested. People walk on roads. The princess can be moved around. Simple map editor. Cut-out characters and props facing the camera, front and back views, paper flip. Character part frames, art gallery page, `ART-GUIDE.md` and templates (2.1). |
 | M3 | Day loop | Clock, phases, speeds, night report. Citizens go out and come home. |
 | M4 | Economy & buildings | Gold and Emberstone, costs, tax, build and demolish caps, demolish unlock, upgrades, data-driven building list. |
 | M5 | Effects system | `effects.ts` runner with tests. Used by everything after this. |
 | M6 | Stats, races, adventurers | Nine stats, race stat leans, apprentices, recruiting, Novice, motivation, daily routine, rest rule, shop priority, buying. Rolled character looks (4.21) for citizens and adventurers. |
 | M7 | Dungeons & combat | World map with neighbor unlocks, stat-based room fights, retreat and defeat, logs, rewards. |
-| M8 | Lodge & decrees | Lodge, party forming by role balance, decree board, sign-up bubbles, approve / Gain XP / Rest, 14:00 rule. |
+| M8 | Lodge & decrees | Lodge (takes over the quest board in front of the castle), party forming by role balance, decrees posted on the quest board, sign-up bubbles, approve / Gain XP / Rest, 14:00 rule. |
 | M9 | Styles | All v1 styles with pros, cons and growth. Style request events, style items (end the adventurer's day), rare dungeon styles. |
 | M10 | Traits | Trait data, discovery, effects on shopping, breaks, gear, abilities, growth, bonds and style requests. |
 | M11 | Bonds & guilds | Bond scores and tiers, princess bonds, dating and marriage, bond-based parties, guild petitions. |
@@ -453,7 +465,7 @@ Build in this order. Each milestone ends with the game running in the browser, t
 | M16 | Princess buildings & town | Gambling Hall mini-games and taxes, Royal Garden (appointments, meetups, dates), princess wardrobe, makeover building, remaining buildings. |
 | M17 | Research, aging, ending | Research lines, storybook aging, retirement and delays, settling down and children, ending (statue), score screen, continuing after the ending. |
 | M18 | Save/load & polish | Versioned saves, overlays, tooltips, settings. Installable web app (5.2). |
-| M19 | Balance pass | Headless sim runs 300 days with a scripted player and prints gold, Emberstone, levels, bonds, styles, clears, retirements and births. Tune JSON so the story lands in 200–300 days. |
+| M19 | Balance pass | Headless sim runs 300 days with a scripted player and prints gold, Emberstone, levels, bonds, styles, clears, retirements and births. Tune JSON so the story lands in 200–300 days. Check pillar 9: a full end-game town (every building) fits with room to spare, and adventurers' walks to the gates stay short. |
 | M20 | New Game+ & post-game | New Game+ carryovers (4.22), villain faces, reincarnation cutscene, post-game content hooks. |
 
 ---
