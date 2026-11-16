@@ -61,6 +61,8 @@ The cutscene lands in M15. Until then, a new game starts **as if the opening had
 - The **quest board** (PLAN's "decree board") is a temporary fixture in front of the castle, not in the plaza. When the **Adventurers' Lodge** is built, it takes over the board's job and adventurers go there to look at quests. Adventurers do not live at the Lodge.
 - **Pointer and touch building**: hover-to-highlight and click to place on PC; tap to preview, tap again or Place to build on phones; the camera holds still during pointing and dragging (goal 6).
 - **Doors are case by case**: each building defines which front squares its door covers (goal 4).
+- **The walls expand.** The chapter 1 town is 40×32 squares inside the walls. In later chapters the walls move outward to give more room. The map lists the walls as stages; M1 builds and draws stage 1 only, and the board has fields around the town for later stages to grow into. When and how each expansion unlocks is decided in a later milestone.
+- **Room for everything (a whole-game rule).** By the end of the game the player can build every single building, with room to spare, without giving up citizens or other buildings to make space. Travel inside town must also stay short, so adventurers never spend too long walking before they leave. (The human's reason: a game this one is inspired by fails at both.) Final wall sizes, walking speed and gate placement are set to honor this; the M19 balance pass checks it.
 - **No well anywhere.** It serves no purpose, so it is dropped from the game (remove it from PLAN 2.2 and the cut-out examples).
 - The Build menu acts directly; it is fine to build from wherever the princess is.
 - Unchanged from earlier decisions: camera turning is a PC extra and nothing may require it; buildings fade when they block the highlight; papercraft buildings, cut-out small things.
@@ -88,6 +90,8 @@ The cutscene lands in M15. Until then, a new game starts **as if the opening had
 ## Anti-goals (failure even if it technically works)
 
 - A building or citizen can end up unreachable.
+- The town runs out of room before every building is built, or the player must give up citizens or buildings to fit the rest.
+- Adventurers lose a long stretch of the day walking across town before they leave.
 - Any build action needs the camera turned (phones can't turn).
 - The highlight or ghost gets hidden behind a building.
 - The grid feels like a spreadsheet: the town should still look like a papercraft diorama, with the grid shown only while building.
@@ -103,7 +107,7 @@ The cutscene lands in M15. Until then, a new game starts **as if the opening had
 
 ## Left to the builder
 
-- **Grid scale.** M0's ground tiles are 1 world unit and the map is 40×32 tiles. Characters will be about 1.5 tiles tall, and the spike's cottage was about 2.6 units wide. Pick a placement-square size (and change the map size in `balance.json` if needed) so a 1×1 cottage reads as a house next to a person, roads read as streets, and the walled town has room for roughly 60 to 80 buildings. Keep the grid square the one unit used everywhere in sim code.
+- **Grid scale.** Pick a placement-square size so a 1×1 cottage reads as a house next to a person and roads read as streets. The chapter 1 town is 40×32 squares inside the walls (decided by the human). Keep the grid square the one unit used everywhere in sim code.
 - The exact shape of the walls, gate positions, plaza size, castle-grounds size and starting roads (gate to plaza, plaza to castle), drawn to match `docs/art/world-reference.png`.
 - How road squares join visually (one cobbled surface with an ink edge only on the outside is the expected look).
 - The map.json and buildings.json schemas, and the art pack manifest format.
@@ -118,4 +122,5 @@ The cutscene lands in M15. Until then, a new game starts **as if the opening had
 - **Section 4.3**: add the opening cutscene as described above.
 - **Section 4.14**: Demolish covers roads, under the no-stranding rule. Sections 4.11, 4.14 and the M8 row: once the Lodge is built (wherever the player puts it), it takes over the quest board's job; adventurers look at quests there but do not live there.
 - **Section 5 and 5.1**: "select a lot" becomes "pick squares"; the Build row becomes "Arrows move a highlight square by square, R turns, Enter places (hold to paint roads)".
+- **Section 3 and a new whole-game principle**: walls in stages that expand in later chapters; the "room for everything" rule and short in-town travel; M19 checks that a full end-game town fits.
 - **Section 6, M1 row**: "Map JSON loads. Walls, gates, plaza, statue, roads and castle draw. Open-grid placement of buildings and roads follows the rules, including no stranding (tested). Build menu and build mode. Art registry and packs with fallback (2.1) draw ground and papercraft buildings from panels."
