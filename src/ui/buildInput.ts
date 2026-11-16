@@ -1,0 +1,71 @@
+// Pure build-mode input logic: keys, camera-relative moves, road strokes and two-tap placing on phones.
+import { screenToWorld } from "../render/camera";
+import type { Rot, Square } from "../sim/townMap";
+
+export type Arrow = "up" | "down" | "left" | "right";
+export type BuildKey =
+  | { kind: "move"; dir: Arrow }
+  | { kind: "turn" }
+  | { kind: "place" }
+  | { kind: "back" };
+
+const MOVES: Record<string, Arrow> = {
+  arrowup: "up", w: "up",
+  arrowdown: "down", s: "down",
+  arrowleft: "left", a: "left",
+  arrowright: "right", d: "right",
+};
+
+/** Build-mode keys. Camera keys (Q, E, + and -) and the menu key return null so they pass through. */
+export function buildKeyFor(key: string): BuildKey | null {
+  const k = key.toLowerCase();
+  const dir = Object.hasOwn(MOVES, k) ? MOVES[k] : undefined;
+  if (dir) return { kind: "move", dir };
+  if (k === "r") return { kind: "turn" };
+  if (k === "enter") return { kind: "place" };
+  if (k === "escape") return { kind: "back" };
+  return null;
+}
+
+const SCREEN: Record<Arrow, [number, number]> = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] };
+
+/**
+ * The square-to-square move for an arrow, relative to the camera. At the diagonal angles (odd steps)
+ * it uses the angle below, so every move goes to a side-by-side square and painted roads connect.
+ */
+export function arrowStep(dir: Arrow, cameraStep: number): { dx: number; dz: number } {
+  const [sx, sz] = SCREEN[dir];
+  const { x, z } = screenToWorld(sx, sz, cameraStep - (cameraStep % 2));
+  return { dx: Math.round(x) + 0, dz: Math.round(z) + 0 };
+}
+
+export function clampToBoard(s: Square, width: number, depth: number): Square {
+  return { x: Math.min(width - 1, Math.max(0, s.x)), z: Math.min(depth - 1, Math.max(0, s.z)) };
+}
+
+export function turnRot(rot: Rot): Rot {
+  return ((rot + 1) % 4) as Rot;
+}
+
+/**
+ * The squares a road stroke passes through going from `from` (already handled) to `to`, side by side
+ * with no gaps, so a fast drag never skips a square. Walks the axis with more distance left first.
+ */
+export function strokeSquares(from: Square, to: Square): Square[] {
+  const out: Square[] = [];
+  let { x, z } = from;
+  while (x !== to.x || z !== to.z) {
+    if (Math.abs(to.x - x) >= Math.abs(to.z - z)) x += Math.sign(to.x - x);
+    else z += Math.sign(to.z - z);
+    out.push({ x, z });
+  }
+  return out;
+}
+
+export interface TapState { armed: Square | null }
+
+/** Phones: the first tap previews a square; tapping the same square again places. */
+export function tap(state: TapState, at: Square): { state: TapState; place: boolean } {
+  const again = state.armed !== null && state.armed.x === at.x && state.armed.z === at.z;
+  return { state: { armed: { x: at.x, z: at.z } }, place: again };
+}
