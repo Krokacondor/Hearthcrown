@@ -187,7 +187,7 @@ export function createTownView(town: Town, stage: number, art: ArtTextures, ink:
     cutouts.push(m);
   };
   addCutout("prop.statue", map.statue.x, map.statue.z, 1.6);
-  addCutout("prop.questBoard", map.questBoard.x + 0.5, map.questBoard.z + 0.5, 0.9);
+  addCutout("prop.questBoard", map.questBoard.x, map.questBoard.z, 0.9);
 
   // ---- Dynamic: roads and buildings.
   const dynamic = new THREE.Group();
@@ -210,7 +210,11 @@ export function createTownView(town: Town, stage: number, art: ArtTextures, ink:
           if (o instanceof THREE.InstancedMesh) o.dispose();
           else if (o instanceof LineSegments2) o.geometry.dispose();
         }
-        const network = [...roads, ...st.gates.flatMap((g) => g.squares)];
+        const fc = map.forecourt;
+        const forecourt: Square[] = [];
+        for (let z = fc.z0; z <= fc.z1; z++) for (let x = fc.x0; x <= fc.x1; x++) forecourt.push({ x, z });
+        // The forecourt is cobbled like the roads.
+        const network = [...roads, ...forecourt, ...st.gates.flatMap((g) => g.squares)];
         const cobble = squaresMesh(network, "tile.road.cobble", palette.cobble);
         // Ink only where the road meets grass: the plaza counts as road for the outline.
         const all = new Set(network.map(squareKey));

@@ -4,7 +4,9 @@ export interface Square { x: number; z: number }
 /** Inclusive on all sides. */
 export interface Rect { x0: number; z0: number; x1: number; z1: number }
 export type Rot = 0 | 1 | 2 | 3;
-export type SquareKind = "outside" | "wall" | "gate" | "plaza" | "castleGrounds" | "reserved" | "open";
+export type SquareKind = "outside" | "wall" | "gate" | "plaza" | "forecourt" | "castleGrounds" | "open";
+/** A 2×2 road cell on the road grid (M2). Cell (0, 0) starts at the inside corner of the stage 1 walls. */
+export interface Cell { cx: number; cz: number }
 /** A gate in the wall ring. `x, z` is its first square; it runs `width` squares along the wall (east on the
  * north and south walls, south on the west and east walls). */
 export interface Gate extends Square {
@@ -24,10 +26,14 @@ export interface TownMap {
   stages: WallStage[];
   plaza: Rect;
   castleGrounds: Rect;
+  /** Paving in front of the castle door. Counts as road and is never removed, like the plaza. */
+  forecourt: Rect;
   /** A world position (a cut-out prop), not a square. */
   statue: { x: number; z: number };
-  /** A reserved square holding the quest board prop. */
-  questBoard: Square;
+  /** A world position on the forecourt (a standing prop), not a square. */
+  questBoard: { x: number; z: number };
+  /** Where the princess stands when a game starts (a world position). */
+  princessStart: { x: number; z: number };
   /** Starting cobbled roads, expanded from segments. */
   roads: Square[];
   /** Scenery outside the gates; not part of the road network. */
@@ -36,6 +42,31 @@ export interface TownMap {
 }
 
 export const squareKey = (s: Square): string => `${s.x},${s.z}`;
+export const cellKey = (c: Cell): string => `${c.cx},${c.cz}`;
+
+/** The first square of road cell (0, 0): just inside the stage 1 walls' north-west corner. */
+export function roadGridOrigin(map: TownMap): Square {
+  const w = map.stages[0]!.walls;
+  return { x: w.x0 + 1, z: w.z0 + 1 };
+}
+
+export function cellOf(map: TownMap, x: number, z: number): Cell {
+  const o = roadGridOrigin(map);
+  return { cx: Math.floor((x - o.x) / 2), cz: Math.floor((z - o.z) / 2) };
+}
+
+/** The 4 squares of a cell: (x,z), (x+1,z), (x,z+1), (x+1,z+1). */
+export function cellSquares(map: TownMap, c: Cell): Square[] {
+  const o = roadGridOrigin(map);
+  const x = o.x + 2 * c.cx, z = o.z + 2 * c.cz;
+  return [{ x, z }, { x: x + 1, z }, { x, z: z + 1 }, { x: x + 1, z: z + 1 }];
+}
+
+/** The middle of a cell, as a world position. */
+export function cellCenter(map: TownMap, c: Cell): { x: number; z: number } {
+  const o = roadGridOrigin(map);
+  return { x: o.x + 2 * c.cx + 1, z: o.z + 2 * c.cz + 1 };
+}
 
 const fail = (msg: string): never => {
   throw new Error(`map.json: ${msg}`);
@@ -54,6 +85,13 @@ function readRect(v: unknown, where: string): Rect {
   const r = { x0: readInt(v, "x0", where), z0: readInt(v, "z0", where), x1: readInt(v, "x1", where), z1: readInt(v, "z1", where) };
   if (r.x1 < r.x0 || r.z1 < r.z0) fail(`${where} has x1/z1 smaller than x0/z0`);
   return r;
+}
+
+function readPoint(v: unknown, where: string): { x: number; z: number } {
+  if (!isObj(v) || typeof v.x !== "number" || typeof v.z !== "number" || !Number.isFinite(v.x) || !Number.isFinite(v.z)) {
+    return fail(`${where} needs x and z`);
+  }
+  return { x: v.x, z: v.z };
 }
 
 function readSquare(v: unknown, where: string): Square {
@@ -93,6 +131,14 @@ export function loadTownMap(json: unknown): TownMap {
   const onBoard = (x: number, z: number): boolean => x >= 0 && z >= 0 && x < width && z < depth;
 
   if (!Array.isArray(json.stages) || json.stages.length === 0) return fail("stages must list at least one wall stage");
+  // The road grid is anchored inside the stage 1 walls; every stage's gates line up with it.
+  const stage0 = json.stages[0];
+  const firstWalls = readRect(isObj(stage0) ? stage0.walls : undefined, "stages[0].walls");
+  const ox = firstWalls.x0 + 1, oz = firstWalls.z0 + 1;
+  const sameCell = (sq: Square[]): boolean =>
+    new Set(sq.map((s) => `${Math.floor((s.x - ox) / 2)},${Math.floor((s.z - oz) / 2)}`)).size === 1;
+  const onGrid = (r: Rect): boolean =>
+    (r.x0 - ox) % 2 === 0 && (r.z0 - oz) % 2 === 0 && (r.x1 - r.x0 + 1) % 2 === 0 && (r.z1 - r.z0 + 1) % 2 === 0;
   const stages: WallStage[] = json.stages.map((st: unknown, i: number) => {
     const where = `stages[${i}]`;
     if (!isObj(st)) return fail(`${where} is missing`);
@@ -110,6 +156,7 @@ export function loadTownMap(json: unknown): TownMap {
       const squares = Array.from({ length: width as number }, (_, i) => (alongX ? { x: sq.x + i, z: sq.z } : { x: sq.x, z: sq.z + i }));
       const corner = (s: Square): boolean => (s.x === walls.x0 || s.x === walls.x1) && (s.z === walls.z0 || s.z === walls.z1);
       if (squares.some((s) => !onRing(walls, s.x, s.z) || corner(s))) fail(`${where}.gates[${k}] is not on a straight stretch of the wall ring`);
+      if (width !== 2 || !sameCell(squares)) fail(`${where}.gates[${k}] must be 2 wide and line up with the road grid`);
       return { id: id as Gate["id"], ...sq, width: width as number, squares };
     });
     if (new Set(gates.map((g) => g.id)).size !== 3) fail(`${where}.gates must have one each of west, south and east`);
@@ -121,13 +168,18 @@ export function loadTownMap(json: unknown): TownMap {
   if (!rectInside(plaza, first)) fail("plaza must be inside the stage 1 walls, not touching them");
   const castleGrounds = readRect(json.castleGrounds, "castleGrounds");
   if (!rectInside(castleGrounds, first)) fail("castleGrounds must be inside the stage 1 walls");
+  if (!onGrid(plaza)) fail("plaza must line up with the road grid");
+  if (!onGrid(castleGrounds)) fail("castleGrounds must line up with the road grid");
+  const forecourt = readRect(json.forecourt, "forecourt");
+  if (!rectInside(forecourt, first)) fail("forecourt must be inside the stage 1 walls");
+  if (!onGrid(forecourt)) fail("forecourt must line up with the road grid");
 
-  if (!isObj(json.statue) || typeof json.statue.x !== "number" || typeof json.statue.z !== "number") {
-    return fail("statue needs x and z");
+  const statue = readPoint(json.statue, "statue");
+  const questBoard = readPoint(json.questBoard, "questBoard");
+  if (questBoard.x < forecourt.x0 || questBoard.x > forecourt.x1 + 1 || questBoard.z < forecourt.z0 || questBoard.z > forecourt.z1 + 1) {
+    fail("questBoard must stand on the forecourt");
   }
-  const statue = { x: json.statue.x, z: json.statue.z };
-  const questBoard = readSquare(json.questBoard, "questBoard");
-  if (!insideRing(first, questBoard.x, questBoard.z)) fail("questBoard must be inside the stage 1 walls");
+  const princessStart = readPoint(json.princessStart, "princessStart");
 
   const roads = readSegments(json.roads, "roads");
   const dirtRoads = readSegments(json.dirtRoads, "dirtRoads");
@@ -143,7 +195,7 @@ export function loadTownMap(json: unknown): TownMap {
     return { type: p.type, x: readInt(p, "x", where), z: readInt(p, "z", where), rot: rot as Rot };
   });
 
-  return { width, depth, stages, plaza, castleGrounds, statue, questBoard, roads, dirtRoads, start };
+  return { width, depth, stages, plaza, castleGrounds, forecourt, statue, questBoard, princessStart, roads, dirtRoads, start };
 }
 
 export function inBoard(map: TownMap, x: number, z: number): boolean {
@@ -158,7 +210,7 @@ export function kindAt(map: TownMap, stage: number, x: number, z: number): Squar
   if (onRing(st.walls, x, z)) return "wall";
   if (!insideRing(st.walls, x, z)) return "outside";
   if (inRect(map.plaza, x, z)) return "plaza";
+  if (inRect(map.forecourt, x, z)) return "forecourt";
   if (inRect(map.castleGrounds, x, z)) return "castleGrounds";
-  if (map.questBoard.x === x && map.questBoard.z === z) return "reserved";
   return "open";
 }
