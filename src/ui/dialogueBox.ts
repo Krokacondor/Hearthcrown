@@ -22,7 +22,12 @@ export function installDialogueBox(root: HTMLElement, live: HTMLElement, onNext:
     if (!el) throw new Error(`Missing ${sel} in #dialogue`);
     return el;
   };
-  const portrait = q<HTMLImageElement>(".dialogue__portrait");
+  // Created here rather than in index.html, so there is never an <img> without a picture.
+  const portrait = document.createElement("img");
+  portrait.className = "dialogue__portrait";
+  portrait.alt = "";
+  portrait.width = portrait.height = 76;
+  root.prepend(portrait);
   const name = q<HTMLElement>(".dialogue__name");
   const line = q<HTMLElement>(".dialogue__line");
   const more = q<SVGElement>(".dialogue__more");
