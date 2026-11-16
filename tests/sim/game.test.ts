@@ -11,6 +11,7 @@ describe("game", () => {
       gold: 100,
       reputation: 0,
       buildings: 1,
+      roads: 56,
       citizens: 0,
       adventurers: 0,
     });
@@ -70,4 +71,85 @@ describe("game", () => {
     }
     expect(game.snapshot()).toEqual(before);
   });
+
+  it("starts with the castle on its grounds and wall stage 0", () => {
+    const game = createGame(7);
+    expect(game.world.buildings).toEqual([{ id: 1, type: "castle", x: 30, z: 3, rot: 0 }]);
+    expect(game.world.wallStage).toBe(0);
+    expect(game.town.map.width).toBe(66);
+  });
+
+  it("placeBuilding puts a building down and gives it a new id", () => {
+    const game = createGame(7);
+    expect(game.command("placeBuilding", { type: "cottage", x: 20, z: 18, rot: 0 })).toEqual({ ok: true });
+    expect(game.snapshot().buildings).toBe(2);
+    expect(game.command("placeBuilding", { type: "cottage", x: 21, z: 18, rot: 0 })).toEqual({ ok: true });
+    expect(game.world.buildings.map((b) => b.id)).toEqual([1, 2, 3]);
+  });
+
+  it("a refused placement says why and changes nothing", () => {
+    const game = createGame(7);
+    const before = game.snapshot();
+    expect(game.command("placeBuilding", { type: "cottage", x: 20, z: 10, rot: 0 }))
+      .toEqual({ ok: false, error: "Needs a road at the door" });
+    expect(game.command("placeBuilding", { type: "castle", x: 30, z: 3, rot: 0 }))
+      .toEqual({ ok: false, error: "Unknown building: castle" });
+    expect(game.snapshot()).toEqual(before);
+  });
+
+  it("placeRoad and removeRoad change the road count", () => {
+    const game = createGame(7);
+    expect(game.command("placeRoad", { x: 20, z: 18 })).toEqual({ ok: true });
+    expect(game.snapshot().roads).toBe(57);
+    expect(game.command("removeRoad", { x: 20, z: 18 })).toEqual({ ok: true });
+    expect(game.snapshot().roads).toBe(56);
+    expect(game.command("removeRoad", { x: 20, z: 19 }).ok).toBe(false);
+    expect(game.snapshot().roads).toBe(56);
+  });
+
+  it("a painted stroke skips a blocked square and never leaves a floating piece", () => {
+    const game = createGame(7);
+    expect(game.command("placeRoad", { x: 33, z: 7 })).toEqual({ ok: true });
+    expect(game.command("placeRoad", { x: 34, z: 7 })).toEqual({ ok: false, error: "Something is in the way" });
+    expect(game.command("placeRoad", { x: 35, z: 7 })).toEqual({ ok: false, error: "Roads must join a road" });
+    expect(game.snapshot().roads).toBe(57);
+  });
+
+  it("checkPlacement gives the same verdicts without changing anything", () => {
+    const game = createGame(7);
+    const before = game.snapshot();
+    expect(game.command("checkPlacement", { kind: "building", type: "cottage", x: 20, z: 18, rot: 0 })).toEqual({ ok: true });
+    expect(game.command("checkPlacement", { kind: "building", type: "cottage", x: 20, z: 10, rot: 0 }))
+      .toEqual({ ok: false, error: "Needs a road at the door" });
+    expect(game.command("checkPlacement", { kind: "road", x: 20, z: 18 })).toEqual({ ok: true });
+    expect(game.command("checkPlacement", { kind: "removeRoad", x: 20, z: 19 }))
+      .toEqual({ ok: false, error: "A town gate would be cut off" });
+    expect(game.command("checkPlacement", { kind: "teleport", x: 1, z: 1 }).ok).toBe(false);
+    expect(game.snapshot()).toEqual(before);
+  });
+
+  it("odd coordinates, turns and types are refused without throwing", () => {
+    const game = createGame(7);
+    const before = game.snapshot();
+    const cmd = game.command as (name: string, args?: unknown) => { ok: boolean };
+    const good = { type: "cottage", x: 20, z: 18, rot: 0 };
+    const cases: unknown[] = [
+      ...[10.5, -1, 66, NaN, "20"].map((x) => ({ ...good, x })),
+      ...[4, -1, 1.5, "1"].map((rot) => ({ ...good, rot })),
+      ...[42, "dragon", undefined].map((type) => ({ ...good, type })),
+      undefined, {},
+    ];
+    for (const args of cases) {
+      let r: { ok: boolean } | undefined;
+      expect(() => { r = cmd("placeBuilding", args); }).not.toThrow();
+      expect(r?.ok, JSON.stringify(args)).toBe(false);
+    }
+    for (const name of ["placeRoad", "removeRoad"]) {
+      for (const args of [{ x: 20.5, z: 18 }, { x: -1, z: 18 }, { x: 66, z: 0 }, { x: NaN, z: 1 }, {}, undefined]) {
+        expect(cmd(name, args).ok).toBe(false);
+      }
+    }
+    expect(game.snapshot()).toEqual(before);
+  });
 });
+

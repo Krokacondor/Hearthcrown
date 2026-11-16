@@ -21,4 +21,10 @@ describe("debug hook", () => {
     installDebugHook(target, createGame(7));
     expect(target.__hearthcrown?.getState().seed).toBe(7);
   });
+
+  it("cmd can lay a road that getState then counts", () => {
+    const hook = createDebugHook(createGame(7));
+    expect(hook.cmd("placeRoad", { x: 20, z: 18 })).toEqual({ ok: true });
+    expect(hook.getState().roads).toBe(57);
+  });
 });
