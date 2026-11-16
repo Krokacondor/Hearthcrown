@@ -1,0 +1,36 @@
+{
+  "citizen": [
+    "I appreciate you, your highness. I hope our town becomes bustling soon, because there's nothing to do right now...",
+    "Good day, your highness! I walked the whole town this morning. Twice. It took no time at all.",
+    "It's so quiet. Even the birds seem bored.",
+    "I keep waiting for a market day. Then I remember we don't have a market.",
+    "Thank you for waking up, your highness. We were starting to talk to the statue.",
+    "I counted the cobblestones on the west road. Would you like to know how many?",
+    "Someday this plaza will be full of people. For now it's full of me.",
+    "Do you think travelers will come? I'd love to see a stranger. Any stranger.",
+    "I planted a flower by the road. It's the most exciting thing in town.",
+    "Your highness! Sorry, I just like saying hello to someone new.",
+    "The walls are very nice walls. I just wish there were more inside them.",
+    "We built what we could before you woke. It isn't much, but it's ours."
+  ],
+  "advisor": [
+    "Your highness. The town is small, but it is a start. Every kingdom begins somewhere.",
+    "The people are glad you're here, even if they have little to do yet.",
+    "More homes would bring more people, your highness. And more people bring more of everything.",
+    "I have been keeping notes. So far they say 'quiet', 'still quiet' and 'very quiet'.",
+    "If I may, your highness: a town needs roads before it needs anything else.",
+    "I will be close by if you need counsel. There is plenty of time for it."
+  ],
+  "chats": [
+    ["Lovely weather today.", "Same as yesterday.", "Lovely weather yesterday too, then."],
+    ["Anything new?", "Nope.", "Me neither."],
+    ["Did you see the princess?", "I did! She waved at me.", "She waved at me first."],
+    ["What did you do today?", "I walked to the gate and back.", "Ooh. Which gate?", "All of them."],
+    ["Think we'll get a bakery?", "I hope so. I miss bread."],
+    ["The statue looks different now.", "That's because she's not in it anymore."],
+    ["I heard someone might move in soon.", "Who told you that?", "Nobody. I'm just hoping."],
+    ["Want to go for a walk?", "We are on a walk.", "A different walk, then."],
+    ["How many people live here now?", "Seven, counting the advisor.", "That's almost a crowd."],
+    ["Do you hear that?", "Hear what?", "Exactly. Nothing at all."]
+  ]
+}

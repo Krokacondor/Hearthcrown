@@ -3,7 +3,7 @@ import { createGame } from "../../src/sim/game";
 import { createRng } from "../../src/sim/rng";
 
 describe("game", () => {
-  it("a new game starts on day 1 at 06:00 with starting gold, reputation 0, the castle standing and no citizens or adventurers", () => {
+  it("a new game starts on day 1 at 06:00 with starting gold, reputation 0, the castle standing, seven townsfolk and no adventurers", () => {
     expect(createGame(7).snapshot()).toEqual({
       seed: 7,
       day: 1,
@@ -12,7 +12,7 @@ describe("game", () => {
       reputation: 0,
       buildings: 1,
       roads: 27,
-      citizens: 0,
+      citizens: 7,
       adventurers: 0,
     });
   });
@@ -31,7 +31,10 @@ describe("game", () => {
     game.rng.next();
     expect(game.command("setSeed", { seed: 7 })).toEqual({ ok: true });
     expect(game.snapshot().seed).toBe(7);
-    expect(game.rng.next()).toBe(createRng(7).next());
+    // Same as a brand-new game with that seed: same people, same next roll.
+    const fresh = createGame(7);
+    expect(JSON.stringify(game.world.people)).toBe(JSON.stringify(fresh.world.people));
+    expect(game.rng.next()).toBe(fresh.rng.next());
   });
 
   it("setSeed with a missing, non-number or NaN seed returns ok:false and changes nothing", () => {

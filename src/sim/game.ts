@@ -1,6 +1,8 @@
 import buildingsJson from "../data/buildings.json";
 import mapJson from "../data/map.json";
 import { canPlaceBuilding, canPlaceRoad, canRemoveRoad, type Check } from "./grid";
+import peopleJson from "../data/people.json";
+import { assignHomes, createPeople } from "./people";
 import { createRng, type Rng } from "./rng";
 import { loadTown } from "./town";
 import { cellOf, cellSquares, inBoard, squareKey, type Rot } from "./townMap";
@@ -35,9 +37,17 @@ export interface Game {
   command(name: string, args?: Record<string, unknown>): CommandResult;
 }
 
+/** A new world with its people, who are rolled from the game's RNG. */
+function newWorld(seed: number, rng: Rng): World {
+  const world = createWorld(seed, TOWN);
+  world.people = createPeople(TOWN, world, rng, peopleJson);
+  assignHomes(TOWN, world);
+  return world;
+}
+
 export function createGame(seed: number): Game {
-  let world = createWorld(seed, TOWN);
   let rng = createRng(seed);
+  let world = newWorld(seed, rng);
 
   /** Reads { x, z } as whole squares on the board, or null. */
   const squareArg = (args: Record<string, unknown>): { x: number; z: number } | null => {
@@ -100,8 +110,8 @@ export function createGame(seed: number): Game {
       if (typeof seed !== "number" || !Number.isFinite(seed)) {
         return { ok: false, error: "setSeed needs { seed: <finite number> }" };
       }
-      world = createWorld(seed, TOWN);
       rng = createRng(seed);
+      world = newWorld(seed, rng);
       return { ok: true };
     },
   };
@@ -123,7 +133,7 @@ export function createGame(seed: number): Game {
         reputation: world.reputation,
         buildings: world.buildings.length,
         roads: world.roads.length / 4,
-        citizens: world.citizens.length,
+        citizens: world.people.length,
         adventurers: world.adventurers.length,
       };
     },

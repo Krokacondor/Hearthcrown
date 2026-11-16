@@ -1,5 +1,6 @@
 import balance from "../data/balance.json";
 import type { BuildingDef } from "./buildings";
+import type { Person } from "./people";
 import { startPrincess, type Princess, type WalkInput } from "./princess";
 import type { Rot, Square, TownMap } from "./townMap";
 
@@ -37,8 +38,8 @@ export interface World {
   princess: Princess;
   /** What the player is holding right now (keys or stick), set by a command. */
   walkInput: WalkInput;
-  /** Typed in M3. */
-  citizens: unknown[];
+  /** The townsfolk: citizens and the advisor (M2). */
+  people: Person[];
   /** Typed in M6. */
   adventurers: unknown[];
 }
@@ -58,7 +59,7 @@ export function createWorld(seed: number, town: Town): World {
     wallStage: 0,
     princess: startPrincess(town),
     walkInput: { x: 0, z: 0, sprint: false },
-    citizens: [],
+    people: [],
     adventurers: [],
   };
 }
