@@ -1,6 +1,6 @@
 // Placement rules for buildings and roads, and the no-stranding rule for removing roads (PLAN.md 3).
 import { footprint } from "./buildings";
-import { kindAt, squareKey, type Rot, type Square } from "./townMap";
+import { kindAt, squareKey, type Gate, type Rot, type Square } from "./townMap";
 import type { Town, World } from "./world";
 
 export type Reason =
@@ -38,7 +38,7 @@ function networkSquares(town: Town, world: World, without?: Square): Set<string>
   for (const r of world.roads) out.add(squareKey(r));
   const { plaza } = town.map;
   for (let z = plaza.z0; z <= plaza.z1; z++) for (let x = plaza.x0; x <= plaza.x1; x++) out.add(`${x},${z}`);
-  for (const g of town.map.stages[world.wallStage]?.gates ?? []) out.add(squareKey(g));
+  for (const g of town.map.stages[world.wallStage]?.gates ?? []) for (const s of g.squares) out.add(squareKey(s));
   if (without) out.delete(squareKey(without));
   return out;
 }
@@ -77,7 +77,7 @@ export function canPlaceRoad(town: Town, world: World, x: number, z: number): Ch
 
 /** Every network square (laid roads, the plaza, the gates) reachable side by side from the current gates. */
 export function reachableFromGates(town: Town, world: World): Set<string> {
-  return flood(networkSquares(town, world), town.map.stages[world.wallStage]?.gates ?? []);
+  return flood(networkSquares(town, world), (town.map.stages[world.wallStage]?.gates ?? []).flatMap((g) => g.squares));
 }
 
 export function canRemoveRoad(town: Town, world: World, x: number, z: number): Check {
@@ -87,7 +87,7 @@ export function canRemoveRoad(town: Town, world: World, x: number, z: number): C
   const network = networkSquares(town, world, { x, z });
   const gates = town.map.stages[world.wallStage]?.gates ?? [];
   // Flood fill from the gates over what would be left.
-  const reached = flood(network, gates);
+  const reached = flood(network, gates.flatMap((g) => g.squares));
   const stranded = [...world.buildings]
     .sort((a, b) => a.id - b.id)
     .filter((b) => {
@@ -129,9 +129,9 @@ function flood(network: Set<string>, starts: Square[]): Set<string> {
 }
 
 /** True when every gate can reach every other gate over the network. */
-function gatesConnected(network: Set<string>, gates: Square[]): boolean {
+function gatesConnected(network: Set<string>, gates: readonly Gate[]): boolean {
   const first = gates[0];
   if (!first) return true;
-  const seen = flood(network, [first]);
-  return gates.every((g) => seen.has(squareKey(g)));
+  const seen = flood(network, first.squares);
+  return gates.every((g) => g.squares.some((s) => seen.has(squareKey(s))));
 }

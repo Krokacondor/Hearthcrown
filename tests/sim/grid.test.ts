@@ -29,10 +29,10 @@ const fails = (c: Check, reason: string, message?: string): void => {
 };
 
 describe("the starting town", () => {
-  it("has the castle and the 56 citizen roads", () => {
+  it("has the castle and the 78 citizen roads", () => {
     const w = fresh();
     expect(w.buildings).toEqual([{ id: 1, type: "castle", x: 30, z: 3, rot: 0 }]);
-    expect(w.roads).toHaveLength(56);
+    expect(w.roads).toHaveLength(78);
     expect(w.wallStage).toBe(0);
   });
 });
@@ -78,7 +78,7 @@ describe("canPlaceBuilding", () => {
 describe("canPlaceRoad", () => {
   it("allows a road next to the network", () => {
     expect(canPlaceRoad(town, fresh(), 20, 18)).toEqual({ ok: true });
-    expect(canPlaceRoad(town, fresh(), 33, 7)).toEqual({ ok: true });
+    expect(canPlaceRoad(town, fresh(), 34, 8)).toEqual({ ok: true });
   });
   it("must join a road side by side", () => {
     fails(canPlaceRoad(town, fresh(), 20, 10), "notConnected", "Roads must join a road");
@@ -97,7 +97,11 @@ describe("canRemoveRoad", () => {
     fails(canRemoveRoad(town, fresh(), 20, 19), "cutsOff", "A town gate would be cut off");
   });
   it("won't cut the castle off", () => {
-    fails(canRemoveRoad(town, fresh(), 32, 15), "cutsOff", "The Castle would be cut off");
+    // The castle road is two squares wide, so one square can go but not both.
+    const w = fresh();
+    expect(canRemoveRoad(town, w, 32, 15)).toEqual({ ok: true });
+    w.roads = w.roads.filter((r) => !(r.x === 32 && r.z === 15));
+    fails(canRemoveRoad(town, w, 33, 15), "cutsOff", "The Castle would be cut off");
   });
   it("allows removal once a detour exists", () => {
     const w = fresh();

@@ -5,7 +5,14 @@ export interface Square { x: number; z: number }
 export interface Rect { x0: number; z0: number; x1: number; z1: number }
 export type Rot = 0 | 1 | 2 | 3;
 export type SquareKind = "outside" | "wall" | "gate" | "plaza" | "castleGrounds" | "reserved" | "open";
-export interface Gate extends Square { id: "west" | "south" | "east" }
+/** A gate in the wall ring. `x, z` is its first square; it runs `width` squares along the wall (east on the
+ * north and south walls, south on the west and east walls). */
+export interface Gate extends Square {
+  id: "west" | "south" | "east";
+  width: number;
+  /** Every square of the opening, expanded from x, z and width. */
+  squares: Square[];
+}
 /** `walls` is the ring itself; the town is strictly inside it. */
 export interface WallStage { walls: Rect; gates: Gate[] }
 export interface StartPlacement { type: string; x: number; z: number; rot: Rot }
@@ -96,8 +103,14 @@ export function loadTownMap(json: unknown): TownMap {
       const sq = readSquare(g, `${where}.gates[${k}]`);
       const id = (g as Record<string, unknown>).id;
       if (id !== "west" && id !== "south" && id !== "east") fail(`${where}.gates[${k}].id must be west, south or east`);
-      if (!onRing(walls, sq.x, sq.z)) fail(`${where}.gates[${k}] is not on the wall ring`);
-      return { id: id as Gate["id"], ...sq };
+      const rawWidth = (g as Record<string, unknown>).width;
+      const width = rawWidth === undefined ? 1 : rawWidth;
+      if (typeof width !== "number" || !Number.isInteger(width) || width < 1) fail(`${where}.gates[${k}].width must be a whole number from 1`);
+      const alongX = sq.z === walls.z0 || sq.z === walls.z1;
+      const squares = Array.from({ length: width as number }, (_, i) => (alongX ? { x: sq.x + i, z: sq.z } : { x: sq.x, z: sq.z + i }));
+      const corner = (s: Square): boolean => (s.x === walls.x0 || s.x === walls.x1) && (s.z === walls.z0 || s.z === walls.z1);
+      if (squares.some((s) => !onRing(walls, s.x, s.z) || corner(s))) fail(`${where}.gates[${k}] is not on a straight stretch of the wall ring`);
+      return { id: id as Gate["id"], ...sq, width: width as number, squares };
     });
     if (new Set(gates.map((g) => g.id)).size !== 3) fail(`${where}.gates must have one each of west, south and east`);
     return { walls, gates };
@@ -141,7 +154,7 @@ export function inBoard(map: TownMap, x: number, z: number): boolean {
 export function kindAt(map: TownMap, stage: number, x: number, z: number): SquareKind {
   const st = map.stages[stage];
   if (!st || !inBoard(map, x, z)) return "outside";
-  if (st.gates.some((g) => g.x === x && g.z === z)) return "gate";
+  if (st.gates.some((g) => g.squares.some((s) => s.x === x && s.z === z))) return "gate";
   if (onRing(st.walls, x, z)) return "wall";
   if (!insideRing(st.walls, x, z)) return "outside";
   if (inRect(map.plaza, x, z)) return "plaza";

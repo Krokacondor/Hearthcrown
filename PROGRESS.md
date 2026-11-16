@@ -39,7 +39,7 @@
 ## M1: Map & placement (2026-11-16)
 
 **Built**
-- `data/map.json` and `sim/townMap.ts`: a 66×48 board with wall stages (stage 1 is the chapter 1 town, 40×32 inside the walls), three gates, the plaza with the statue, castle grounds on the north wall, the quest board, the citizens' 56 starting roads and dirt roads out of the gates. Bad data fails at startup with a message naming the field.
+- `data/map.json` and `sim/townMap.ts`: a 66×48 board with wall stages (stage 1 is the chapter 1 town, 40×32 inside the walls), three gates, the plaza with the statue, castle grounds on the north wall, the quest board, the citizens' 78 starting roads (the north-south road through the plaza is 2 squares wide, and so is the south gate) and dirt roads out of the gates. Gates have a width in map.json. Bad data fails at startup with a message naming the field.
 - `data/buildings.json` and `sim/buildings.ts`: Cottage 1×1, Family Home 2×1, Manor 2×2, Adventurers' Lodge 3×2 and the Castle 6×4, each with its own door squares, turned to 4 facings.
 - `sim/grid.ts`: open-grid placement rules (inside the walls, no overlap, a road at the door) and roads that must join the network. The no-stranding rule refuses removing a road that would cut off a building, a gate or a piece of road, and names what would be cut off.
 - Game commands `placeBuilding`, `placeRoad`, `removeRoad`, `checkPlacement`; a new game starts with the castle standing (until the M15 cutscene) and the snapshot counts roads.
@@ -52,7 +52,7 @@
 
 **Browser check (Playwright, dev server)**
 - Console: no errors or warnings at 1280×800 or 844×390.
-- New game: `getState()` shows buildings 1 (the castle) and roads 56.
+- New game: `getState()` shows buildings 1 (the castle) and roads 56 (78 after the road was widened on 2026-11-16).
 - Keyboard only: Tab to the map, B, arrows and Enter built a Cottage and an Adventurers' Lodge; R turns; holding Enter painted 4 connected road squares; Esc twice closed everything; right-click went back one level.
 - Mouse: a fast two-event drag painted 9 connected squares with no gaps. Touch (synthesized finger events at 844×390): tap previews, Place builds, a drag painted 11 squares, a second finger cancelled a stroke.
 - `cmd("removeRoad")` refused cutting off the west gate and the castle with their messages and allowed removing a dead end.

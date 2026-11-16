@@ -11,7 +11,7 @@ describe("game", () => {
       gold: 100,
       reputation: 0,
       buildings: 1,
-      roads: 56,
+      roads: 78,
       citizens: 0,
       adventurers: 0,
     });
@@ -100,19 +100,19 @@ describe("game", () => {
   it("placeRoad and removeRoad change the road count", () => {
     const game = createGame(7);
     expect(game.command("placeRoad", { x: 20, z: 18 })).toEqual({ ok: true });
-    expect(game.snapshot().roads).toBe(57);
+    expect(game.snapshot().roads).toBe(79);
     expect(game.command("removeRoad", { x: 20, z: 18 })).toEqual({ ok: true });
-    expect(game.snapshot().roads).toBe(56);
+    expect(game.snapshot().roads).toBe(78);
     expect(game.command("removeRoad", { x: 20, z: 19 }).ok).toBe(false);
-    expect(game.snapshot().roads).toBe(56);
+    expect(game.snapshot().roads).toBe(78);
   });
 
   it("a painted stroke skips a blocked square and never leaves a floating piece", () => {
     const game = createGame(7);
-    expect(game.command("placeRoad", { x: 33, z: 7 })).toEqual({ ok: true });
+    expect(game.command("placeRoad", { x: 34, z: 8 })).toEqual({ ok: true });
     expect(game.command("placeRoad", { x: 34, z: 7 })).toEqual({ ok: false, error: "Something is in the way" });
     expect(game.command("placeRoad", { x: 35, z: 7 })).toEqual({ ok: false, error: "Roads must join a road" });
-    expect(game.snapshot().roads).toBe(57);
+    expect(game.snapshot().roads).toBe(79);
   });
 
   it("checkPlacement gives the same verdicts without changing anything", () => {

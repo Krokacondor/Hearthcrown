@@ -102,7 +102,7 @@ export function createTownView(town: Town, stage: number, art: ArtTextures, ink:
   };
 
   const w = st.walls;
-  const gateKeys = new Set(st.gates.map(squareKey));
+  const gateKeys = new Set(st.gates.flatMap((g) => g.squares.map(squareKey)));
   // Each side as a list of squares, split into runs between gates.
   const sides: Square[][] = [
     Array.from({ length: w.x1 - w.x0 + 1 }, (_, i) => ({ x: w.x0 + i, z: w.z0 })),
@@ -133,8 +133,12 @@ export function createTownView(town: Town, stage: number, art: ArtTextures, ink:
   for (const g of st.gates) {
     const alongX = g.z === w.z0 || g.z === w.z1;
     const [dx, dz] = alongX ? [1, 0] : [0, 1];
-    for (const sgn of [-1, 1]) addBlock(g.x + 0.5 + sgn * dx * 1.05, g.z + 0.5 + sgn * dz * 1.05, TOWER * 0.85, GATE_TOWER_H, TOWER * 0.85);
-    addBlock(g.x + 0.5, g.z + 0.5, alongX ? 1.4 : WALL_T + 0.2, 0.55, alongX ? WALL_T + 0.2 : 1.4, GATE_TOWER_H - 0.85);
+    // The opening's centre, so a wide gate gets its towers either side of the whole opening.
+    const cx = g.x + 0.5 + (dx * (g.width - 1)) / 2, cz = g.z + 0.5 + (dz * (g.width - 1)) / 2;
+    const reach = g.width / 2 + 0.55;
+    for (const sgn of [-1, 1]) addBlock(cx + sgn * dx * reach, cz + sgn * dz * reach, TOWER * 0.85, GATE_TOWER_H, TOWER * 0.85);
+    const span = g.width + 0.4;
+    addBlock(cx, cz, alongX ? span : WALL_T + 0.2, 0.55, alongX ? WALL_T + 0.2 : span, GATE_TOWER_H - 0.85);
   }
 
   // ---- Plaza and dirt roads (fixed).
@@ -206,7 +210,7 @@ export function createTownView(town: Town, stage: number, art: ArtTextures, ink:
           if (o instanceof THREE.InstancedMesh) o.dispose();
           else if (o instanceof LineSegments2) o.geometry.dispose();
         }
-        const network = [...roads, ...st.gates];
+        const network = [...roads, ...st.gates.flatMap((g) => g.squares)];
         const cobble = squaresMesh(network, "tile.road.cobble", palette.cobble);
         // Ink only where the road meets grass: the plaza counts as road for the outline.
         const all = new Set(network.map(squareKey));
