@@ -2,6 +2,7 @@ import balance from "../data/balance.json";
 import type { BuildingDef } from "./buildings";
 import type { Person } from "./people";
 import { startPrincess, type Princess, type WalkInput } from "./princess";
+import type { Dialogue } from "./talk";
 import type { Rot, Square, TownMap } from "./townMap";
 
 /** The fixed data a game is played on: the map and the building list. */
@@ -40,6 +41,8 @@ export interface World {
   walkInput: WalkInput;
   /** The townsfolk: citizens and the advisor (M2). */
   people: Person[];
+  /** The princess's open conversation, or null. */
+  dialogue: Dialogue | null;
   /** Typed in M6. */
   adventurers: unknown[];
 }
@@ -60,6 +63,7 @@ export function createWorld(seed: number, town: Town): World {
     princess: startPrincess(town),
     walkInput: { x: 0, z: 0, sprint: false },
     people: [],
+    dialogue: null,
     adventurers: [],
   };
 }

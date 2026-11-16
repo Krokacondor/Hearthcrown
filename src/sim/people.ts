@@ -136,7 +136,7 @@ function goIdle(p: Person, rng: Rng, w: WalkBalance): void {
 }
 
 /** One tick for everyone: idlers pick somewhere to go, walkers follow their lane, lost walkers re-route. */
-export function stepPeople(town: Town, world: World, rng: Rng, dt: number, _lines: DialogueData, w: WalkBalance = balance.walk): void {
+export function stepPeople(town: Town, world: World, rng: Rng, dt: number, lines: DialogueData, w: WalkBalance = balance.walk): void {
   const { map } = town;
   const walkable = walkableCells(town, world);
   const destinations = [...walkable].sort();
@@ -148,6 +148,11 @@ export function stepPeople(town: Town, world: World, rng: Rng, dt: number, _line
       if (p.timer > 0) continue;
       const [cx, cz] = rng.pick(destinations).split(",").map(Number) as [number, number];
       if (!routeTo(map, walkable, p, { cx, cz }, w)) goIdle(p, rng, w);
+      continue;
+    }
+    if (p.state === "waiting") {
+      p.timer -= dt;
+      if (p.timer <= 0) goIdle(p, rng, w);
       continue;
     }
     if (p.state !== "walking") continue;
@@ -181,5 +186,54 @@ export function stepPeople(town: Town, world: World, rng: Rng, dt: number, _line
       }
     }
     if (p.route.length === 0) goIdle(p, rng, w);
+  }
+
+  stepChats(world, rng, dt, lines, w);
+}
+
+/** Runs chats in progress, and lets two free people who meet roll once to start one. */
+function stepChats(world: World, rng: Rng, dt: number, lines: DialogueData, w: WalkBalance): void {
+  const byId = new Map(world.people.map((p) => [p.id, p]));
+  for (const p of world.people) {
+    const c = p.chat;
+    // The first speaker keeps the shared clock for the pair.
+    if (p.state !== "chatting" || !c || c.firstSpeaker !== p.id) continue;
+    const partner = byId.get(c.partner);
+    c.timer -= dt;
+    if (c.timer > 0) continue;
+    c.index++;
+    c.timer = w.chatLineSeconds;
+    if (partner?.chat) { partner.chat.index = c.index; partner.chat.timer = c.timer; }
+    if (c.index < c.lines.length) continue;
+    for (const q of [p, partner]) {
+      if (!q) continue;
+      q.chat = null;
+      q.chatCooldown = w.chatCooldownSeconds;
+      goIdle(q, rng, w);
+    }
+  }
+
+  const free = (p: Person): boolean => (p.state === "idle" || p.state === "walking") && p.chatCooldown <= 0;
+  for (let i = 0; i < world.people.length; i++) {
+    const a = world.people[i]!;
+    if (!free(a)) continue;
+    for (let j = i + 1; j < world.people.length; j++) {
+      const b = world.people[j]!;
+      if (!free(b) || Math.hypot(a.x - b.x, a.z - b.z) > w.chatStartRange) continue;
+      a.chatCooldown = b.chatCooldown = w.chatCooldownSeconds;
+      if (!rng.chance(w.chatChance) || lines.chats.length === 0) break;
+      const said = rng.pick(lines.chats);
+      const first = Math.min(a.id, b.id);
+      const d = Math.hypot(b.x - a.x, b.z - a.z) || 1;
+      a.facing = { x: (b.x - a.x) / d, z: (b.z - a.z) / d };
+      b.facing = { x: -a.facing.x + 0, z: -a.facing.z + 0 };
+      for (const [q, other] of [[a, b], [b, a]] as const) {
+        q.state = "chatting";
+        q.route = [];
+        q.routeCells = [];
+        q.chat = { partner: other.id, lines: [...said], index: 0, firstSpeaker: first, timer: w.chatLineSeconds };
+      }
+      break;
+    }
   }
 }
