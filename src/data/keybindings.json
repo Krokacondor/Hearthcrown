@@ -1,0 +1,24 @@
+{
+  "camera": {
+    "turnLeft": ["q"],
+    "turnRight": ["e"],
+    "zoomIn": ["+", "="],
+    "zoomOut": ["-", "_"]
+  },
+  "build": {
+    "up": ["ArrowUp", "w"],
+    "down": ["ArrowDown", "s"],
+    "left": ["ArrowLeft", "a"],
+    "right": ["ArrowRight", "d"],
+    "turn": ["r"],
+    "place": ["Enter"],
+    "back": ["Escape"]
+  },
+  "menu": {
+    "build": ["b"],
+    "up": ["ArrowUp", "w"],
+    "down": ["ArrowDown", "s"],
+    "choose": ["Enter", " "],
+    "back": ["Escape"]
+  }
+}

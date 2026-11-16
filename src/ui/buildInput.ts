@@ -1,6 +1,7 @@
 // Pure build-mode input logic: keys, camera-relative moves, road strokes and two-tap placing on phones.
 import { screenToWorld } from "../render/camera";
 import type { Rot, Square } from "../sim/townMap";
+import { actionFor } from "./bindings";
 
 export type Arrow = "up" | "down" | "left" | "right";
 export type BuildKey =
@@ -9,22 +10,16 @@ export type BuildKey =
   | { kind: "place" }
   | { kind: "back" };
 
-const MOVES: Record<string, Arrow> = {
-  arrowup: "up", w: "up",
-  arrowdown: "down", s: "down",
-  arrowleft: "left", a: "left",
-  arrowright: "right", d: "right",
-};
-
-/** Build-mode keys. Camera keys (Q, E, + and -) and the menu key return null so they pass through. */
+/** Build-mode keys from the bindings table. Camera and menu keys return null so they pass through. */
 export function buildKeyFor(key: string): BuildKey | null {
-  const k = key.toLowerCase();
-  const dir = Object.hasOwn(MOVES, k) ? MOVES[k] : undefined;
-  if (dir) return { kind: "move", dir };
-  if (k === "r") return { kind: "turn" };
-  if (k === "enter") return { kind: "place" };
-  if (k === "escape") return { kind: "back" };
-  return null;
+  const action = actionFor("build", key);
+  switch (action) {
+    case "up": case "down": case "left": case "right": return { kind: "move", dir: action };
+    case "turn": return { kind: "turn" };
+    case "place": return { kind: "place" };
+    case "back": return { kind: "back" };
+    default: return null;
+  }
 }
 
 const SCREEN: Record<Arrow, [number, number]> = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] };
