@@ -10,6 +10,7 @@ import { createBuildGhost, type GhostItem } from "./buildGhost";
 import { createGround } from "./ground";
 import { segmentHitsBox } from "./occlusion";
 import { palette } from "./palette";
+import { createPeopleView } from "./people";
 import { createTownView } from "./town";
 
 const INK_WIDTH_PX = 3.5;
@@ -28,6 +29,14 @@ export interface DioramaView {
   /** Adds and removes roads and buildings to match the world. */
   syncTown(world: Readonly<World>): void;
   setGridVisible(on: boolean): void;
+  /** Moves the paper people to match the world; `talkTarget` gets the marigold marker. */
+  syncPeople(world: Readonly<World>, talkTarget: number | null): void;
+  /** The person under a screen point (0 is the princess), or null. */
+  pickPerson(clientX: number, clientY: number): number | null;
+  /** A world point on screen, in CSS pixels from the canvas's top-left; null when behind the camera. */
+  screenOf(x: number, y: number, z: number): { x: number; y: number } | null;
+  /** The point just above someone's head (0 is the princess). */
+  headOf(id: number): { x: number; y: number; z: number } | null;
   /** Fades whatever stands between the camera and any part of these squares; null fades nothing. */
   setFocus(squares: readonly Square[] | null): void;
   /** The board square under a screen point, or null off the board. */
@@ -64,7 +73,8 @@ export function createDiorama(container: HTMLElement, town: Town, registry: ArtR
   const ground = createGround(width, depth, stage.walls, renderer.capabilities.getMaxAnisotropy(), art, ink);
   const townView = createTownView(town, 0, art, ink);
   const ghost = createBuildGhost(town, art, ink);
-  scene.add(ground.group, townView.group, ghost.group);
+  const people = createPeopleView(art);
+  scene.add(ground.group, townView.group, ghost.group, people.group);
 
   scene.add(new THREE.AmbientLight(0xffffff, 2.1));
   const sun = new THREE.DirectionalLight(0xffffff, 1.35);
@@ -101,6 +111,7 @@ export function createDiorama(container: HTMLElement, town: Town, registry: ArtR
       camera.position.set(...pose.position);
       camera.lookAt(...pose.lookAt);
       townView.faceCamera((state.step * 2 * Math.PI) / TURN_STEPS);
+      people.faceCamera((state.step * 2 * Math.PI) / TURN_STEPS);
     },
     syncTown(world) {
       // The first sync draws the starting town as it stands; later builds drop onto the board.
@@ -109,6 +120,26 @@ export function createDiorama(container: HTMLElement, town: Town, registry: ArtR
     },
     setGridVisible(on) {
       ground.setGridVisible(on);
+    },
+    syncPeople(world, talkTarget) {
+      people.sync(world, talkTarget);
+    },
+    pickPerson(clientX, clientY) {
+      const rect = renderer.domElement.getBoundingClientRect();
+      if (rect.width === 0 || rect.height === 0) return null;
+      const ndc = new THREE.Vector2(((clientX - rect.left) / rect.width) * 2 - 1, -((clientY - rect.top) / rect.height) * 2 + 1);
+      raycaster.setFromCamera(ndc, camera);
+      return people.pick(raycaster);
+    },
+    screenOf(x, y, z) {
+      const v = new THREE.Vector3(x, y, z).project(camera);
+      if (v.z > 1) return null;
+      const rect = renderer.domElement.getBoundingClientRect();
+      return { x: ((v.x + 1) / 2) * rect.width, y: ((1 - v.y) / 2) * rect.height };
+    },
+    headOf(id) {
+      const v = people.headOf(id);
+      return v ? { x: v.x, y: v.y, z: v.z } : null;
     },
     setFocus(squares) {
       focus = (squares ?? []).flatMap((s) => [
@@ -138,6 +169,7 @@ export function createDiorama(container: HTMLElement, town: Town, registry: ArtR
     },
     render(dt) {
       townView.update(dt);
+      people.update(dt);
       const k = 1 - Math.pow(0.001, dt);
       const cam = camera.position.toArray() as [number, number, number];
       for (const o of townView.occluders()) {

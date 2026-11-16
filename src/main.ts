@@ -44,8 +44,8 @@ if (!view) {
   let goalTurns = 0;
   let shownTurns = 0;
   let shownZoom = cam.zoom;
-  // What the camera looks at: the plaza until M2 gives it a princess to follow; the highlight while building.
-  const goalTarget = { ...balance.camera.startTarget };
+  // What the camera looks at: the princess, or the build highlight while building.
+  const goalTarget = { x: game.world.princess.x, z: game.world.princess.z };
   const shownTarget = { ...goalTarget };
   const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)");
 
@@ -133,8 +133,16 @@ if (!view) {
     shownZoom += (cam.zoom - shownZoom) * k;
     shownTarget.x += (goalTarget.x - shownTarget.x) * k;
     shownTarget.z += (goalTarget.z - shownTarget.z) * k;
+    game.advance(dt);
+    const w = game.world;
+    view.syncPeople(w, game.snapshot().talkTarget);
+    if (!build.isOpen()) {
+      goalTarget.x = w.princess.x;
+      goalTarget.z = w.princess.z;
+    }
     view.setCamera(shownTarget, { step: shownTurns, zoom: shownZoom });
-    view.setFocus(build.focusSquares());
+    // Anything standing between the camera and her (or the build highlight) fades.
+    view.setFocus(build.focusSquares() ?? [{ x: Math.floor(w.princess.x), z: Math.floor(w.princess.z) }]);
     view.render(dt);
     requestAnimationFrame(frame);
   };

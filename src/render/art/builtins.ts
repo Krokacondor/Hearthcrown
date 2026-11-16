@@ -152,7 +152,61 @@ const OTHER: Record<string, () => Drawing> = {
     `<path d="M0,0 L${PX},${PX} M${PX},0 L0,${PX}" stroke="#fffdf8" stroke-width="8"/>`),
 };
 
+// ---- Placeholder people (M2): paper cut-outs and portraits, replaced by real character art in M2b.
+interface PersonLook { body: string; trim: string; hair: string; skin: string }
+/** Citizen looks: one body colour each, so people are easy to tell apart. */
+const CITIZEN_LOOKS: PersonLook[] = [
+  { body: "#5d8fd0", trim: "#3f6fae", hair: "#5b3a26", skin: "#f2c9a0" },
+  { body: "#d9774a", trim: "#b25a32", hair: "#2f2424", skin: "#d9a57a" },
+  { body: "#6aa457", trim: "#4f8540", hair: "#c98b3a", skin: "#f5d3b0" },
+  { body: "#e0a43a", trim: "#b98222", hair: "#7a4a2e", skin: "#c58a5e" },
+  { body: "#3e9e9a", trim: "#2c7a77", hair: "#e3c27a", skin: "#f2c9a0" },
+  { body: "#a0573a", trim: "#7e4128", hair: "#1f1a1c", skin: "#8f5e3e" },
+  { body: "#7a8a9a", trim: "#5c6b7a", hair: "#b0472e", skin: "#f5d3b0" },
+  { body: "#c8a2d8", trim: "#a17fb3", hair: "#4a3326", skin: "#e2b48c" },
+];
+/** The princess wears pink with a marigold crown; the advisor a deep plum robe no citizen shares. */
+const PRINCESS_LOOK: PersonLook = { body: palette.roofPink, trim: "#d977a0", hair: "#f0c76a", skin: "#f5d3b0" };
+const ADVISOR_LOOK: PersonLook = { body: "#5a3d6e", trim: "#3f2a4e", hair: "#d8d2cc", skin: "#e8c39e" };
+
+function lookFor(who: string): PersonLook | null {
+  if (who === "princess") return PRINCESS_LOOK;
+  if (who === "advisor") return ADVISOR_LOOK;
+  const m = /^citizen\.(\d+)$/.exec(who);
+  return m ? CITIZEN_LOOKS[Number(m[1])] ?? null : null;
+}
+
+const CROWN = (cx: number, top: number, w: number): string =>
+  `<path d="M${cx - w / 2},${top + w * 0.5} L${cx - w * 0.4},${top} L${cx - w * 0.15},${top + w * 0.3} L${cx},${top - w * 0.1} L${cx + w * 0.15},${top + w * 0.3} L${cx + w * 0.4},${top} L${cx + w / 2},${top + w * 0.5} Z" fill="${palette.marigold}" stroke-width="6"/>`;
+
+/** A standing paper person: a bell-shaped body and a round head, seen from the front. */
+function figure(who: string, look: PersonLook): Drawing {
+  const crown = who === "princess" ? CROWN(70, 18, 44) : "";
+  const beard = who === "advisor" ? `<path d="M52,96 Q70,124 88,96 Z" fill="${look.hair}" stroke-width="6"/>` : "";
+  return svg(140, 260, "",
+    `<path d="M70,110 C40,110 26,170 18,248 H122 C114,170 100,110 70,110 Z" fill="${look.body}"/>` +
+    `<path d="M40,200 H100" stroke="${look.trim}" stroke-width="12" fill="none"/>` +
+    `<circle cx="70" cy="76" r="38" fill="${look.skin}"/>` +
+    `<path d="M32,74 C32,36 108,36 108,74 C96,58 44,58 32,74 Z" fill="${look.hair}"/>` +
+    beard + crown);
+}
+
+/** A head-and-shoulders portrait for the dialogue box, on a pale sky card. */
+function portrait(who: string, look: PersonLook): Drawing {
+  const crown = who === "princess" ? CROWN(80, 22, 50) : "";
+  const beard = who === "advisor" ? `<path d="M58,106 Q80,140 102,106 Z" fill="${look.hair}" stroke-width="6"/>` : "";
+  return svg(160, 160, fill(160, 160, palette.sky),
+    `<path d="M20,160 C24,120 50,112 80,112 C110,112 136,120 140,160 Z" fill="${look.body}"/>` +
+    `<circle cx="80" cy="80" r="40" fill="${look.skin}"/>` +
+    `<path d="M40,78 C40,36 120,36 120,78 C106,60 54,60 40,78 Z" fill="${look.hair}"/>` +
+    beard + crown);
+}
+
+const PEOPLE_IDS = ["princess", "advisor", ...CITIZEN_LOOKS.map((_, i) => `citizen.${i}`)]
+  .flatMap((who) => [`figure.${who}`, `portrait.${who}`]);
+
 export const BUILTIN_IDS: ReadonlySet<string> = new Set([
+  ...PEOPLE_IDS,
   ...Object.keys(OTHER),
   ...[...defsByArt.keys()].flatMap((art) => FACES.map((f) => `${art}.${f}`)),
 ]);
@@ -161,6 +215,9 @@ export const BUILTIN_IDS: ReadonlySet<string> = new Set([
 export function drawBuiltin(id: string): Drawing {
   const other = Object.hasOwn(OTHER, id) ? OTHER[id] : undefined;
   if (other) return other();
+  const person = /^(figure|portrait)\.(.+)$/.exec(id);
+  const look = person ? lookFor(person[2]!) : null;
+  if (person && look) return person[1] === "figure" ? figure(person[2]!, look) : portrait(person[2]!, look);
   const dot = id.lastIndexOf(".");
   const def = defsByArt.get(id.slice(0, dot));
   const face = id.slice(dot + 1) as (typeof FACES)[number];

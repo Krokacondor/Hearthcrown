@@ -81,3 +81,24 @@ describe("built-in art", () => {
     expect(drawBuiltin("nope").svg).toBe(drawBuiltin("missing").svg);
   });
 });
+
+describe("placeholder people art", () => {
+  it("has a figure and a portrait for the princess, the advisor and every citizen look", async () => {
+    const people = (await import("../../src/data/people.json")).default;
+    const ids = ["figure.princess", "figure.advisor", "portrait.princess", "portrait.advisor"];
+    for (let i = 0; i < people.looks; i++) ids.push(`figure.citizen.${i}`, `portrait.citizen.${i}`);
+    for (const id of ids) {
+      expect(BUILTIN_IDS.has(id), id).toBe(true);
+      const d = drawBuiltin(id);
+      expect(d.width, id).toBeGreaterThan(0);
+      expect(d.svg, id).toContain("<svg");
+      expect(d.svg, id).not.toContain("#e84bd6"); // not the missing-art drawing
+    }
+  });
+  it("gives every citizen look its own body colour", () => {
+    const people = { looks: 8 };
+    const fills = new Set<string>();
+    for (let i = 0; i < people.looks; i++) fills.add(drawBuiltin(`figure.citizen.${i}`).svg);
+    expect(fills.size).toBe(people.looks);
+  });
+});

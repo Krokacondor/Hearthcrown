@@ -23,6 +23,8 @@ export interface BuildModeDeps {
 export interface BuildMode {
   /** The squares the camera should keep in view (fades whatever blocks them), or null when not placing. */
   focusSquares(): Square[] | null;
+  /** True while the Build menu or build mode is showing (the princess stands still). */
+  isOpen(): boolean;
 }
 
 type Mode = "closed" | "menu" | "placing";
@@ -298,6 +300,7 @@ export function installBuildMode(deps: BuildModeDeps): BuildMode {
   map.addEventListener("pointercancel", endPointer);
 
   return {
+    isOpen: () => mode !== "closed",
     focusSquares() {
       if (mode !== "placing") return null;
       const def = item.id === "road" ? undefined : game.town.defs.get(item.id);
