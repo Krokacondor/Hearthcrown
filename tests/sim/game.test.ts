@@ -3,14 +3,14 @@ import { createGame } from "../../src/sim/game";
 import { createRng } from "../../src/sim/rng";
 
 describe("game", () => {
-  it("a new game starts on day 1 at 06:00 with starting gold, reputation 0 and no buildings, citizens or adventurers", () => {
+  it("a new game starts on day 1 at 06:00 with starting gold, reputation 0, the castle standing and no citizens or adventurers", () => {
     expect(createGame(7).snapshot()).toEqual({
       seed: 7,
       day: 1,
       time: 360,
       gold: 100,
       reputation: 0,
-      buildings: 0,
+      buildings: 1,
       citizens: 0,
       adventurers: 0,
     });

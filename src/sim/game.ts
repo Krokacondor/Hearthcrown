@@ -1,5 +1,12 @@
+import buildingsJson from "../data/buildings.json";
+import mapJson from "../data/map.json";
+import { loadBuildingDefs } from "./buildings";
 import { createRng, type Rng } from "./rng";
-import { createWorld, type World } from "./world";
+import { loadTownMap } from "./townMap";
+import { createWorld, type Town, type World } from "./world";
+
+/** Loaded once; bad data fails here at startup with a message naming the file. */
+const TOWN: Town = { map: loadTownMap(mapJson), defs: loadBuildingDefs(buildingsJson) };
 
 /** A plain copy of the headline state. Safe to read and mutate. */
 export interface Snapshot {
@@ -24,7 +31,7 @@ export interface Game {
 }
 
 export function createGame(seed: number): Game {
-  let world = createWorld(seed);
+  let world = createWorld(seed, TOWN);
   let rng = createRng(seed);
 
   const commands: Record<string, (args: Record<string, unknown>) => CommandResult> = {
@@ -33,7 +40,7 @@ export function createGame(seed: number): Game {
       if (typeof seed !== "number" || !Number.isFinite(seed)) {
         return { ok: false, error: "setSeed needs { seed: <finite number> }" };
       }
-      world = createWorld(seed);
+      world = createWorld(seed, TOWN);
       rng = createRng(seed);
       return { ok: true };
     },
