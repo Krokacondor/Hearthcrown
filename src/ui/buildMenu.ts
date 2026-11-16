@@ -20,3 +20,18 @@ export function menuItems(defs: ReadonlyMap<string, BuildingDef>): MenuItem[] {
 export function moveSelection(index: number, delta: -1 | 1, count: number): number {
   return count <= 0 ? 0 : (((index + delta) % count) + count) % count;
 }
+
+export interface TrayStatus {
+  text: string;
+  tone: "none" | "problem" | "success";
+  canPlace: boolean;
+}
+
+/**
+ * What the tray says. Right after a build (`justBuilt` names it) it celebrates, instead of reporting the
+ * new building as in the way, until the highlight moves.
+ */
+export function trayStatus(check: { ok: true } | { ok: false; error: string }, justBuilt: string | null): TrayStatus {
+  if (justBuilt) return { text: justBuilt === "Road" ? "Road laid" : `${justBuilt} built`, tone: "success", canPlace: check.ok };
+  return check.ok ? { text: "", tone: "none", canPlace: true } : { text: check.error, tone: "problem", canPlace: false };
+}

@@ -81,6 +81,8 @@ export function createDiorama(container: HTMLElement, town: Town, registry: ArtR
   /** Points to keep in view: each focus square's corners and centre, just above the ground. */
   let focus: [number, number, number][] = [];
   const raycaster = new THREE.Raycaster();
+  const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)");
+  let synced = false;
   const groundPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
 
   return {
@@ -99,7 +101,9 @@ export function createDiorama(container: HTMLElement, town: Town, registry: ArtR
       townView.faceCamera((state.step * 2 * Math.PI) / TURN_STEPS);
     },
     syncTown(world) {
-      townView.sync(world.roads, world.buildings);
+      // The first sync draws the starting town as it stands; later builds drop onto the board.
+      townView.sync(world.roads, world.buildings, synced && !reduceMotion.matches);
+      synced = true;
     },
     setGridVisible(on) {
       ground.setGridVisible(on);
@@ -128,6 +132,7 @@ export function createDiorama(container: HTMLElement, town: Town, registry: ArtR
       ghost.hide();
     },
     render(dt) {
+      townView.update(dt);
       const k = 1 - Math.pow(0.001, dt);
       const cam = camera.position.toArray() as [number, number, number];
       for (const o of townView.occluders()) {

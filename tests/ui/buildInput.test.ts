@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { arrowStep, buildKeyFor, clampToBoard, strokeSquares, tap, turnRot, type Arrow } from "../../src/ui/buildInput";
+import { arrowStep, buildKeyFor, clampToBoard, nearestFit, strokeSquares, tap, turnRot, type Arrow } from "../../src/ui/buildInput";
 
 describe("buildKeyFor", () => {
   it("maps arrows and WASD to moves", () => {
@@ -80,5 +80,22 @@ describe("tap", () => {
     expect(first).toEqual({ state: { armed: { x: 3, z: 3 } }, place: false });
     expect(tap(first.state, { x: 3, z: 3 }).place).toBe(true);
     expect(tap(first.state, { x: 4, z: 3 })).toEqual({ state: { armed: { x: 4, z: 3 } }, place: false });
+  });
+});
+
+describe("nearestFit", () => {
+  it("returns the start when it fits", () => {
+    expect(nearestFit({ x: 5, z: 5 }, () => true, 10, 10)).toEqual({ x: 5, z: 5 });
+  });
+  it("finds the closest square that fits, nearer rings first", () => {
+    const fits = (s: { x: number; z: number }) => s.x === 7 && s.z === 5;
+    expect(nearestFit({ x: 5, z: 5 }, fits, 20, 20)).toEqual({ x: 7, z: 5 });
+    const twoFit = (s: { x: number; z: number }) => (s.x === 6 && s.z === 5) || (s.x === 9 && s.z === 5);
+    expect(nearestFit({ x: 5, z: 5 }, twoFit, 20, 20)).toEqual({ x: 6, z: 5 });
+  });
+  it("stays on the board and gives up beyond the search radius", () => {
+    expect(nearestFit({ x: 0, z: 0 }, (s) => s.x === 1 && s.z === 1, 4, 4)).toEqual({ x: 1, z: 1 });
+    expect(nearestFit({ x: 0, z: 0 }, () => false, 4, 4)).toBeNull();
+    expect(nearestFit({ x: 0, z: 0 }, (s) => s.x === 30, 66, 48, 12)).toBeNull();
   });
 });

@@ -8,6 +8,7 @@ import { squareKey, type Rect, type Square } from "../sim/townMap";
 import type { PlacedBuilding, Town } from "../sim/world";
 import { drawBuiltin } from "./art/builtins";
 import type { ArtTextures } from "./art/textures";
+import { dropPose } from "./drop";
 import { createPaperBuilding, placeOnFootprint } from "./papercraft";
 import { palette } from "./palette";
 
@@ -32,7 +33,10 @@ export interface TownView {
   group: THREE.Group;
   /** Everything that can fade: walls, gatehouses and buildings. */
   occluders(): Occluder[];
-  sync(roads: readonly Square[], buildings: readonly PlacedBuilding[]): void;
+  /** `drop` gives newly added buildings the paper drop onto the board. */
+  sync(roads: readonly Square[], buildings: readonly PlacedBuilding[], drop: boolean): void;
+  /** Advances drops in progress. */
+  update(dt: number): void;
   /** Turns the cut-out props to face the camera. */
   faceCamera(yaw: number): void;
 }
@@ -179,11 +183,12 @@ export function createTownView(town: Town, stage: number, art: ArtTextures, ink:
   const buildingMeshes = new Map<number, { object: THREE.Group; key: string }>();
   let roadObjs: THREE.Object3D[] = [];
   let lastRoads = "";
+  const drops: { object: THREE.Group; t: number }[] = [];
 
   return {
     group,
     occluders: () => occluders,
-    sync(roads, buildings) {
+    sync(roads, buildings, drop) {
       const roadKey = roads.map(squareKey).sort().join(";");
       if (roadKey !== lastRoads) {
         lastRoads = roadKey;
@@ -213,8 +218,24 @@ export function createTownView(town: Town, stage: number, art: ArtTextures, ink:
         buildingMeshes.set(b.id, { object, key });
         const lines = object.children.filter((c) => c instanceof LineSegments2);
         addOccluder(object, object.userData.materials as THREE.Material[], lines);
+        if (drop) {
+          const pose = dropPose(0);
+          object.position.y = pose.y;
+          object.rotation.x = pose.tilt;
+          drops.push({ object, t: 0 });
+        }
       }
       for (const id of [...buildingMeshes.keys()]) if (!seen.has(id)) removeBuilding(id);
+    },
+    update(dt) {
+      for (let i = drops.length - 1; i >= 0; i--) {
+        const d = drops[i]!;
+        d.t += dt;
+        const pose = dropPose(d.t);
+        d.object.position.y = pose.y;
+        d.object.rotation.x = pose.tilt;
+        if (pose.done) drops.splice(i, 1);
+      }
     },
     faceCamera(yaw) {
       for (const c of cutouts) c.rotation.y = yaw;

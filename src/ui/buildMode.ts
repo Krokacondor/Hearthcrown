@@ -5,8 +5,8 @@ import { footprint } from "../sim/buildings";
 import type { Game } from "../sim/game";
 import type { Rot, Square } from "../sim/townMap";
 import { actionFor } from "./bindings";
-import { arrowStep, buildKeyFor, clampToBoard, strokeSquares, tap, turnRot, type TapState } from "./buildInput";
-import { menuItems, moveSelection, type MenuItem } from "./buildMenu";
+import { arrowStep, buildKeyFor, clampToBoard, nearestFit, strokeSquares, tap, turnRot, type TapState } from "./buildInput";
+import { menuItems, moveSelection, trayStatus, type MenuItem } from "./buildMenu";
 
 export interface BuildModeDeps {
   game: Game;
@@ -55,6 +55,8 @@ export function installBuildMode(deps: BuildModeDeps): BuildMode {
   let hl: Square = { x: 0, z: 0 };
   let taps: TapState = { armed: null };
   let enterHeld = false;
+  /** Names what was just built at the highlight, until it moves; the tray celebrates instead of reporting it as in the way. */
+  let justBuilt: string | null = null;
 
   // ---- The flat's rows.
   const rows = items.map((it) => {
@@ -106,35 +108,50 @@ export function installBuildMode(deps: BuildModeDeps): BuildMode {
     trayName.textContent = it.name;
     traySize.textContent = sizeText(it);
     turnBtn.hidden = it.id === "road";
+    justBuilt = null;
     const t = deps.cameraTarget();
-    hl = clampToBoard({ x: Math.floor(t.x), z: Math.floor(t.z) }, width, depth);
+    const from = clampToBoard({ x: Math.floor(t.x), z: Math.floor(t.z) }, width, depth);
+    // Open on the nearest spot that fits, so placing never starts on a red verdict when a green one is close.
+    hl = nearestFit(from, (s) => check(s).ok, width, depth) ?? from;
+    deps.followTo(hl.x + 0.5, hl.z + 0.5);
     view.setGridVisible(true);
     refresh();
     map.focus({ preventScroll: true });
   }
 
   // ---- The preview and placing, all through sim commands.
+  function check(s: Square): { ok: true } | { ok: false; error: string } {
+    return item.id === "road"
+      ? game.command("checkPlacement", { kind: "road", x: s.x, z: s.z })
+      : game.command("checkPlacement", { kind: "building", type: item.id, x: s.x, z: s.z, rot });
+  }
   function refresh(): void {
     if (mode !== "placing") return;
-    const result = item.id === "road"
-      ? game.command("checkPlacement", { kind: "road", x: hl.x, z: hl.z })
-      : game.command("checkPlacement", { kind: "building", type: item.id, x: hl.x, z: hl.z, rot });
+    const result = check(hl);
     view.showGhost(item.id === "road" ? { kind: "road" } : { kind: "building", type: item.id, rot }, hl, result.ok);
-    const reason = result.ok ? "" : result.error;
-    if (trayReason.textContent !== reason) trayReason.textContent = reason;
-    placeBtn.disabled = !result.ok;
+    const status = trayStatus(result, justBuilt);
+    if (trayReason.textContent !== status.text) trayReason.textContent = status.text;
+    trayReason.dataset.tone = status.tone;
+    placeBtn.disabled = !status.canPlace;
   }
   function roadAt(s: Square): void {
-    if (game.command("placeRoad", { x: s.x, z: s.z }).ok) view.syncTown(game.world);
+    if (game.command("placeRoad", { x: s.x, z: s.z }).ok) {
+      view.syncTown(game.world);
+      justBuilt = "Road";
+    }
   }
   function place(): void {
     if (mode !== "placing") return;
     if (item.id === "road") roadAt(hl);
-    else if (game.command("placeBuilding", { type: item.id, x: hl.x, z: hl.z, rot }).ok) view.syncTown(game.world);
+    else if (game.command("placeBuilding", { type: item.id, x: hl.x, z: hl.z, rot }).ok) {
+      view.syncTown(game.world);
+      justBuilt = item.name;
+    }
     refresh();
   }
   function moveTo(s: Square, follow: boolean): void {
     hl = clampToBoard(s, width, depth);
+    justBuilt = null;
     if (follow) deps.followTo(hl.x + 0.5, hl.z + 0.5);
     if (enterHeld && item.id === "road") roadAt(hl);
     refresh();
@@ -168,7 +185,7 @@ export function installBuildMode(deps: BuildModeDeps): BuildMode {
       const { dx, dz } = arrowStep(k.dir, deps.cameraStep());
       moveTo({ x: hl.x + dx, z: hl.z + dz }, true);
     } else if (k.kind === "turn") {
-      if (item.id !== "road") { rot = turnRot(rot); refresh(); }
+      if (item.id !== "road") { rot = turnRot(rot); justBuilt = null; refresh(); }
     } else if (k.kind === "place") {
       if (e.repeat) return;
       if (item.id === "road") enterHeld = true;
@@ -184,7 +201,7 @@ export function installBuildMode(deps: BuildModeDeps): BuildMode {
   // ---- Buttons.
   openBtn.addEventListener("click", () => (mode === "closed" ? openMenu() : closeAll()));
   for (const b of document.querySelectorAll<HTMLButtonElement>("[data-back]")) b.addEventListener("click", back);
-  turnBtn.addEventListener("click", () => { rot = turnRot(rot); refresh(); });
+  turnBtn.addEventListener("click", () => { rot = turnRot(rot); justBuilt = null; refresh(); });
   placeBtn.addEventListener("click", place);
   // Right-click is Back everywhere (PLAN.md 5.1).
   window.addEventListener("contextmenu", (e) => { e.preventDefault(); back(); });
@@ -208,6 +225,7 @@ export function installBuildMode(deps: BuildModeDeps): BuildMode {
     if (e.button !== 0 || !sq) return;
     mouseDown = sq;
     hl = sq;
+    justBuilt = null;
     if (item.id === "road") { painting = true; roadAt(sq); }
     refresh();
   });
@@ -223,6 +241,7 @@ export function installBuildMode(deps: BuildModeDeps): BuildMode {
       }
       touch.last = sq;
       hl = sq;
+      if (!touch.painting) justBuilt = null;
       refresh();
       return;
     }

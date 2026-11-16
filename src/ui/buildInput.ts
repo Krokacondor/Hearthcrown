@@ -64,3 +64,26 @@ export function tap(state: TapState, at: Square): { state: TapState; place: bool
   const again = state.armed !== null && state.armed.x === at.x && state.armed.z === at.z;
   return { state: { armed: { x: at.x, z: at.z } }, place: again };
 }
+
+/**
+ * The nearest square to `start` (by rings outward, then by walking distance) where `fits` is true,
+ * staying on the board and within `maxRadius` rings. Null when nothing nearby fits.
+ */
+export function nearestFit(start: Square, fits: (s: Square) => boolean, width: number, depth: number,
+  maxRadius = 12): Square | null {
+  for (let r = 0; r <= maxRadius; r++) {
+    const ring: Square[] = [];
+    for (let z = start.z - r; z <= start.z + r; z++) {
+      for (let x = start.x - r; x <= start.x + r; x++) {
+        if (Math.max(Math.abs(x - start.x), Math.abs(z - start.z)) !== r) continue;
+        if (x < 0 || z < 0 || x >= width || z >= depth) continue;
+        ring.push({ x, z });
+      }
+    }
+    ring.sort((a, b) =>
+      Math.abs(a.x - start.x) + Math.abs(a.z - start.z) - (Math.abs(b.x - start.x) + Math.abs(b.z - start.z)) || a.z - b.z || a.x - b.x);
+    const hit = ring.find(fits);
+    if (hit) return hit;
+  }
+  return null;
+}

@@ -16,7 +16,10 @@ export type GhostItem = { kind: "road" } | { kind: "building"; type: string; rot
 const FILL_Y = 0.035;
 const LINE_Y = 0.045;
 const GHOST_OPACITY = 0.55;
-const FILL_OPACITY = 0.5;
+const FILL_OPACITY = 0.72;
+/** The ghost is tinted by the verdict, so fits / doesn't fit reads on the building itself. */
+const TINT_OK = "#bfe8ad";
+const TINT_BAD = "#f7a9b6";
 
 export interface BuildGhost {
   group: THREE.Group;
@@ -46,6 +49,7 @@ export function createBuildGhost(town: Town, art: ArtTextures, ink: LineMaterial
   const arrowMat = new THREE.MeshBasicMaterial({ color: palette.ink });
 
   const ghosts = new Map<string, THREE.Group>();
+  const depthMask = new THREE.MeshBasicMaterial({ colorWrite: false, side: THREE.DoubleSide });
   let shownGhost: THREE.Group | null = null;
   const ghostFor = (type: string): THREE.Group | null => {
     const have = ghosts.get(type);
@@ -59,6 +63,14 @@ export function createBuildGhost(town: Town, art: ArtTextures, ink: LineMaterial
       m.depthWrite = false;
     }
     g.traverse((o) => { o.castShadow = false; if (o instanceof LineSegments2) o.visible = false; });
+    // Depth-only copies draw first, so the see-through ghost hides its own back walls and roof seams.
+    for (const mesh of g.children.filter((c): c is THREE.Mesh => c instanceof THREE.Mesh)) {
+      const mask = new THREE.Mesh(mesh.geometry, depthMask);
+      mask.position.copy(mesh.position);
+      mask.quaternion.copy(mesh.quaternion);
+      mask.scale.copy(mesh.scale);
+      g.add(mask);
+    }
     ghosts.set(type, g);
     return g;
   };
@@ -77,6 +89,7 @@ export function createBuildGhost(town: Town, art: ArtTextures, ink: LineMaterial
         ({ cells, doorFront } = footprint(def, at.x, at.z, item.rot));
         const g = ghostFor(item.type);
         if (g) {
+          for (const m of g.userData.materials as THREE.MeshLambertMaterial[]) m.color.set(fits ? TINT_OK : TINT_BAD);
           placeOnFootprint(g, def, at.x, at.z, item.rot);
           group.add(g);
           shownGhost = g;
