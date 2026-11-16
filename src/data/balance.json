@@ -12,9 +12,9 @@
     "height": 10,
     "distance": 11,
     "lookHeight": 0.8,
-    "startZoom": 2.45,
-    "minZoom": 0.9,
-    "maxZoom": 3.4,
-    "zoomStep": 0.15
+    "startZoom": 4.2,
+    "minZoom": 1.0,
+    "maxZoom": 7.6,
+    "zoomStep": 0.4
   }
 }

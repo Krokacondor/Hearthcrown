@@ -1,19 +1,37 @@
 import * as THREE from "three";
+import { LineMaterial } from "three/addons/lines/LineMaterial.js";
 import balance from "../data/balance.json";
-import mapJson from "../data/map.json";
-import { loadTownMap } from "../sim/townMap";
-import { cameraPose, type CameraState } from "./camera";
+import type { Square } from "../sim/townMap";
+import type { Town, World } from "../sim/world";
+import type { ArtRegistry } from "./art/registry";
+import { createArtTextures } from "./art/textures";
+import { cameraPose, TURN_STEPS, type CameraState } from "./camera";
 import { createGround } from "./ground";
+import { segmentHitsBox } from "./occlusion";
 import { palette } from "./palette";
+import { createTownView } from "./town";
+
+const INK_WIDTH_PX = 3.5;
+/** Opacity of a building, wall or gatehouse that stands in front of what the player is looking at. */
+const FADED = 0.3;
+/** Height above the ground the camera looks at when deciding what blocks the view. */
+const FOCUS_Y = 0.3;
 
 export interface DioramaView {
   setSize(width: number, height: number, pixelRatio: number): void;
   setCamera(target: { x: number; z: number }, state: CameraState): void;
-  render(): void;
+  /** Adds and removes roads and buildings to match the world. */
+  syncTown(world: Readonly<World>): void;
+  setGridVisible(on: boolean): void;
+  /** Fades whatever stands between the camera and this point; null fades nothing. */
+  setFocus(point: { x: number; z: number } | null): void;
+  /** The board square under a screen point, or null off the board. */
+  pickSquare(clientX: number, clientY: number): Square | null;
+  render(dt: number): void;
 }
 
 /** Builds the diorama scene inside `container`. Returns null when the browser can't do WebGL. */
-export function createDiorama(container: HTMLElement): DioramaView | null {
+export function createDiorama(container: HTMLElement, town: Town, registry: ArtRegistry): DioramaView | null {
   let renderer: THREE.WebGLRenderer;
   try {
     renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -25,14 +43,17 @@ export function createDiorama(container: HTMLElement): DioramaView | null {
   renderer.domElement.setAttribute("aria-hidden", "true");
   container.append(renderer.domElement);
 
-  const { width: widthTiles, depth: depthTiles } = loadTownMap(mapJson);
-  const cx = widthTiles / 2, cz = depthTiles / 2;
+  const { width, depth } = town.map;
+  const stage = town.map.stages[0]!;
+  const cx = width / 2, cz = depth / 2;
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(palette.sky);
-  const ground = createGround(widthTiles, depthTiles, renderer.capabilities.getMaxAnisotropy());
-  // Square (x, z) covers world [x, x+1] x [z, z+1], so the board's corner sits at the origin.
-  ground.group.position.set(cx, 0, cz);
-  scene.add(ground.group);
+  const art = createArtTextures(registry, renderer.capabilities.getMaxAnisotropy());
+  const ink = new LineMaterial({ color: palette.ink, linewidth: INK_WIDTH_PX });
+
+  const ground = createGround(width, depth, stage.walls, renderer.capabilities.getMaxAnisotropy(), art, ink);
+  const townView = createTownView(town, 0, art, ink);
+  scene.add(ground.group, townView.group);
 
   scene.add(new THREE.AmbientLight(0xffffff, 2.1));
   const sun = new THREE.DirectionalLight(0xffffff, 1.35);
@@ -40,29 +61,67 @@ export function createDiorama(container: HTMLElement): DioramaView | null {
   sun.target.position.set(cx, 0, cz);
   scene.add(sun.target);
   sun.castShadow = true;
-  sun.shadow.mapSize.set(2048, 2048);
+  sun.shadow.mapSize.set(4096, 4096);
   sun.shadow.bias = -0.0006;
-  const reach = Math.max(widthTiles, depthTiles) * 0.9;
-  Object.assign(sun.shadow.camera, { left: -reach, right: reach, top: reach, bottom: -reach, near: 1, far: 90 });
+  const reach = Math.max(width, depth) * 0.75;
+  Object.assign(sun.shadow.camera, { left: -reach, right: reach, top: reach, bottom: -reach, near: 1, far: 120 });
   sun.shadow.camera.updateProjectionMatrix();
   scene.add(sun);
 
-  const camera = new THREE.PerspectiveCamera(balance.camera.fov, 1, 0.1, 400);
+  const camera = new THREE.PerspectiveCamera(balance.camera.fov, 1, 0.1, 500);
+  let focus: THREE.Vector3 | null = null;
+  const raycaster = new THREE.Raycaster();
+  const groundPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
 
   return {
-    setSize(width, height, pixelRatio) {
+    setSize(w, h, pixelRatio) {
       renderer.setPixelRatio(pixelRatio);
-      renderer.setSize(width, height, false);
-      ground.setResolution(width, height);
-      camera.aspect = width / height;
+      renderer.setSize(w, h, false);
+      ink.resolution.set(w, h);
+      camera.aspect = w / h;
       camera.updateProjectionMatrix();
     },
     setCamera(target, state) {
       const pose = cameraPose(target, state);
       camera.position.set(...pose.position);
       camera.lookAt(...pose.lookAt);
+      townView.faceCamera((state.step * 2 * Math.PI) / TURN_STEPS);
     },
-    render() {
+    syncTown(world) {
+      townView.sync(world.roads, world.buildings);
+    },
+    setGridVisible(on) {
+      ground.setGridVisible(on);
+    },
+    setFocus(point) {
+      focus = point ? new THREE.Vector3(point.x, FOCUS_Y, point.z) : null;
+    },
+    pickSquare(clientX, clientY) {
+      const rect = renderer.domElement.getBoundingClientRect();
+      if (rect.width === 0 || rect.height === 0) return null;
+      const ndc = new THREE.Vector2(((clientX - rect.left) / rect.width) * 2 - 1, -((clientY - rect.top) / rect.height) * 2 + 1);
+      raycaster.setFromCamera(ndc, camera);
+      const hit = raycaster.ray.intersectPlane(groundPlane, new THREE.Vector3());
+      if (!hit) return null;
+      const x = Math.floor(hit.x), z = Math.floor(hit.z);
+      return x >= 0 && z >= 0 && x < width && z < depth ? { x, z } : null;
+    },
+    render(dt) {
+      const k = 1 - Math.pow(0.001, dt);
+      const cam = camera.position.toArray() as [number, number, number];
+      for (const o of townView.occluders()) {
+        const blocks = focus !== null &&
+          segmentHitsBox(cam, focus.toArray() as [number, number, number], { min: o.box.min.toArray(), max: o.box.max.toArray() });
+        const goal = blocks ? FADED : 1;
+        if (o.opacity === goal) continue;
+        o.opacity = Math.abs(goal - o.opacity) < 0.01 ? goal : o.opacity + (goal - o.opacity) * k;
+        for (const m of o.materials) {
+          m.transparent = o.opacity < 1;
+          m.opacity = o.opacity;
+          m.depthWrite = o.opacity >= 1;
+        }
+        for (const line of o.ink) line.visible = o.opacity > 0.6;
+      }
       renderer.render(scene, camera);
     },
   };

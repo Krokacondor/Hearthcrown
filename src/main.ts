@@ -2,7 +2,10 @@ import "@fontsource/lilita-one/400.css";
 import "@fontsource/nunito/600.css";
 import "@fontsource/nunito/800.css";
 import "./style.css";
+import artJson from "./data/art.json";
 import balance from "./data/balance.json";
+import { BUILTIN_IDS } from "./render/art/builtins";
+import { createArtRegistry, loadPacks } from "./render/art/registry";
 import type { DebugHook } from "./debug";
 import { startCamera, turn, zoomBy, type CameraState } from "./render/camera";
 import { createDiorama } from "./render/scene";
@@ -22,12 +25,19 @@ const game = createGame(7);
 const map = byId("map");
 renderTopBar(byId("topbar"), game.snapshot());
 
-const view = createDiorama(map);
+// Art packs (PLAN.md 2.1): any piece a pack doesn't cover, or a pack that fails to load, uses the built-in drawing.
+const packs = await loadPacks(artJson.packs, async (url) => {
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`${res.status}`);
+  return res.json();
+}, (msg) => console.warn(msg));
+const view = createDiorama(map, game.town, createArtRegistry(BUILTIN_IDS, packs));
 if (!view) {
   byId("no-webgl").hidden = false;
   byId("turn").hidden = true;
   byId("keys").hidden = true;
 } else {
+  view.syncTown(game.world);
   let cam: CameraState = startCamera();
   // Unwrapped turn count, so going from step 7 to 0 animates the short way round.
   let goalTurns = 0;
@@ -108,9 +118,9 @@ if (!view) {
     const k = reduceMotion.matches ? 1 : 1 - Math.pow(0.0005, dt);
     shownTurns += (goalTurns - shownTurns) * k;
     shownZoom += (cam.zoom - shownZoom) * k;
-    // M0 has no princess to follow yet, so frame a corner of the board (M2 follows her instead).
+    // No princess to follow yet (M2), so frame the plaza.
     view.setCamera(balance.camera.startTarget, { step: shownTurns, zoom: shownZoom });
-    view.render();
+    view.render(dt);
     requestAnimationFrame(frame);
   };
   requestAnimationFrame(frame);
