@@ -28,3 +28,15 @@ describe("debug hook", () => {
     expect(hook.getState().roads).toBe(57);
   });
 });
+
+describe("debug hook change callback", () => {
+  it("calls onChange after a command that worked, and not after one that failed", () => {
+    let changes = 0;
+    const hook = createDebugHook(createGame(7), () => changes++);
+    hook.cmd("placeRoad", { x: 20, z: 18 });
+    expect(changes).toBe(1);
+    hook.cmd("placeRoad", { x: 20, z: 10 });
+    hook.cmd("checkPlacement", { kind: "road", x: 20, z: 17 });
+    expect(changes).toBe(1);
+  });
+});

@@ -143,5 +143,6 @@ if (!view) {
 
 if (import.meta.env.DEV) {
   const { installDebugHook } = await import("./debug");
-  installDebugHook(window as unknown as { __hearthcrown?: DebugHook }, game);
+  installDebugHook(window as unknown as { __hearthcrown?: DebugHook }, game, () => view?.syncTown(game.world));
+  (window as unknown as { __hearthcrownGpu?: () => unknown }).__hearthcrownGpu = () => view?.memory();
 }

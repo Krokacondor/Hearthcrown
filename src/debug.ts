@@ -6,13 +6,18 @@ export interface DebugHook {
   cmd(name: string, args?: Record<string, unknown>): CommandResult;
 }
 
-export function createDebugHook(game: Game): DebugHook {
+/** `onChange` runs after a command that changed the game, so the picture can redraw. */
+export function createDebugHook(game: Game, onChange?: () => void): DebugHook {
   return {
     getState: () => game.snapshot(),
-    cmd: (name, args) => game.command(name, args),
+    cmd: (name, args) => {
+      const result = game.command(name, args);
+      if (result.ok && name !== "checkPlacement") onChange?.();
+      return result;
+    },
   };
 }
 
-export function installDebugHook(target: { __hearthcrown?: DebugHook }, game: Game): void {
-  target.__hearthcrown = createDebugHook(game);
+export function installDebugHook(target: { __hearthcrown?: DebugHook }, game: Game, onChange?: () => void): void {
+  target.__hearthcrown = createDebugHook(game, onChange);
 }
