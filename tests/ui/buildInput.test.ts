@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { arrowStep, buildKeyFor, clampToBoard, nearestFit, strokeSquares, tap, turnRot, type Arrow } from "../../src/ui/buildInput";
+import { arrowStep, buildKeyFor, clampToBoard, contextMenuIsBack, nearestFit, releaseTouch, strokeSquares, tap, turnRot, type Arrow } from "../../src/ui/buildInput";
 
 describe("buildKeyFor", () => {
   it("maps arrows and WASD to moves", () => {
@@ -97,5 +97,29 @@ describe("nearestFit", () => {
     expect(nearestFit({ x: 0, z: 0 }, (s) => s.x === 1 && s.z === 1, 4, 4)).toEqual({ x: 1, z: 1 });
     expect(nearestFit({ x: 0, z: 0 }, () => false, 4, 4)).toBeNull();
     expect(nearestFit({ x: 0, z: 0 }, (s) => s.x === 30, 66, 48, 12)).toBeNull();
+  });
+});
+
+describe("releaseTouch", () => {
+  it("treats a finger that never left its square as a tap", () => {
+    const armed = { armed: { x: 3, z: 3 } };
+    expect(releaseTouch(armed, { x: 3, z: 3 }, false)).toEqual({ state: armed, place: true });
+    expect(releaseTouch({ armed: null }, { x: 3, z: 3 }, false)).toEqual({ state: armed, place: false });
+  });
+  it("never builds when a drag ends, even back on the armed square", () => {
+    const armed = { armed: { x: 3, z: 3 } };
+    expect(releaseTouch(armed, { x: 3, z: 3 }, true)).toEqual({ state: armed, place: false });
+    expect(releaseTouch(armed, { x: 5, z: 3 }, true)).toEqual({ state: { armed: { x: 5, z: 3 } }, place: false });
+  });
+});
+
+describe("contextMenuIsBack", () => {
+  it("is Back for a mouse right-click", () => {
+    expect(contextMenuIsBack("mouse", false)).toBe(true);
+    expect(contextMenuIsBack(undefined, false)).toBe(true);
+  });
+  it("is not Back for a long press on a touch screen", () => {
+    expect(contextMenuIsBack("touch", false)).toBe(false);
+    expect(contextMenuIsBack("mouse", true)).toBe(false);
   });
 });

@@ -87,3 +87,16 @@ export function nearestFit(start: Square, fits: (s: Square) => boolean, width: n
   }
   return null;
 }
+
+/**
+ * Phones: what lifting a finger does. Only a finger that never left its square counts as a tap (and can
+ * build on the armed square); ending a drag just arms the square it ended on, so a drag never builds.
+ */
+export function releaseTouch(state: TapState, at: Square, moved: boolean): { state: TapState; place: boolean } {
+  return moved ? { state: { armed: { x: at.x, z: at.z } }, place: false } : tap(state, at);
+}
+
+/** Right-click is Back; a long press on a touch screen (which also fires contextmenu) is not. */
+export function contextMenuIsBack(pointerType: string | undefined, touchActive: boolean): boolean {
+  return !touchActive && pointerType !== "touch";
+}

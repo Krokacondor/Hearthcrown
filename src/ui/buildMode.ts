@@ -5,7 +5,7 @@ import { footprint } from "../sim/buildings";
 import type { Game } from "../sim/game";
 import type { Rot, Square } from "../sim/townMap";
 import { actionFor } from "./bindings";
-import { arrowStep, buildKeyFor, clampToBoard, nearestFit, strokeSquares, tap, turnRot, type TapState } from "./buildInput";
+import { arrowStep, buildKeyFor, clampToBoard, contextMenuIsBack, nearestFit, releaseTouch, strokeSquares, turnRot, type TapState } from "./buildInput";
 import { menuItems, moveSelection, trayStatus, type MenuItem } from "./buildMenu";
 
 export interface BuildModeDeps {
@@ -207,21 +207,25 @@ export function installBuildMode(deps: BuildModeDeps): BuildMode {
   turnBtn.addEventListener("click", () => { rot = turnRot(rot); justBuilt = null; refresh(); });
   placeBtn.addEventListener("click", place);
   // Right-click is Back everywhere (PLAN.md 5.1).
-  window.addEventListener("contextmenu", (e) => { e.preventDefault(); back(); });
+  // A long press on a touch screen also fires contextmenu; that must not leave build mode.
+  window.addEventListener("contextmenu", (e) => {
+    e.preventDefault();
+    if (contextMenuIsBack((e as PointerEvent).pointerType, fingers > 0 || touch !== null)) back();
+  });
 
   // ---- Mouse: the highlight follows the pointer; click places; hold and drag paints roads. The camera stays put.
   let mouseDown: Square | null = null;
   let painting = false;
   // ---- Touch: tap to preview, tap again (or Place) to build, drag to paint roads; a second finger cancels.
   let fingers = 0;
-  let touch: { id: number; start: Square; last: Square; painting: boolean; cancelled: boolean } | null = null;
+  let touch: { id: number; start: Square; last: Square; painting: boolean; cancelled: boolean; moved: boolean } | null = null;
 
   map.addEventListener("pointerdown", (e) => {
     if (mode !== "placing") return;
     const sq = view.pickSquare(e.clientX, e.clientY);
     if (e.pointerType === "touch") {
       fingers++;
-      if (fingers === 1 && sq) touch = { id: e.pointerId, start: sq, last: sq, painting: false, cancelled: false };
+      if (fingers === 1 && sq) touch = { id: e.pointerId, start: sq, last: sq, painting: false, cancelled: false, moved: false };
       else if (touch) touch.cancelled = true;
       return;
     }
@@ -243,6 +247,7 @@ export function installBuildMode(deps: BuildModeDeps): BuildMode {
         for (const s of strokeSquares(touch.last, sq)) roadAt(s);
       }
       touch.last = sq;
+      touch.moved = true;
       hl = sq;
       if (!touch.painting) justBuilt = null;
       refresh();
@@ -264,7 +269,7 @@ export function installBuildMode(deps: BuildModeDeps): BuildMode {
       const t = touch;
       touch = null;
       if (e.type === "pointercancel" || t.cancelled || t.painting || mode !== "placing") return;
-      const r = tap(taps, t.last);
+      const r = releaseTouch(taps, t.last, t.moved);
       taps = r.state;
       if (r.place && same(hl, t.last)) place();
       else moveTo(t.last, true); // after the finger lifts, the camera glides to the preview
