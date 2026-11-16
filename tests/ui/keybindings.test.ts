@@ -25,4 +25,8 @@ describe("keybindings.json", () => {
     const cam = Object.values(bindings.camera).flat().map((k) => k.toLowerCase());
     for (const k of Object.values(bindings.build).flat()) expect(cam).not.toContain(k.toLowerCase());
   });
+  it("keeps walk keys from clashing with camera keys", () => {
+    const cam = Object.values(bindings.camera).flat().map((k) => k.toLowerCase());
+    for (const k of Object.values(bindings.walk).flat()) expect(cam).not.toContain(k.toLowerCase());
+  });
 });

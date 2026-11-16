@@ -20,5 +20,13 @@
     "down": ["ArrowDown", "s"],
     "choose": ["Enter", " "],
     "back": ["Escape"]
+  },
+  "walk": {
+    "up": ["ArrowUp", "w"],
+    "down": ["ArrowDown", "s"],
+    "left": ["ArrowLeft", "a"],
+    "right": ["ArrowRight", "d"],
+    "sprint": ["Shift"],
+    "talk": [" ", "Enter"]
   }
 }
