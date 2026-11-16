@@ -6,11 +6,15 @@ import artJson from "./data/art.json";
 import balance from "./data/balance.json";
 import { BUILTIN_IDS } from "./render/art/builtins";
 import { createArtRegistry, loadPacks } from "./render/art/registry";
+import { artUrl } from "./render/art/textures";
 import type { DebugHook } from "./debug";
 import { startCamera, turn, zoomBy, type CameraState } from "./render/camera";
 import { createDiorama } from "./render/scene";
 import { viewSize } from "./render/viewSize";
 import { createGame } from "./sim/game";
+import { currentChatLine } from "./sim/talk";
+import { bubbleContent, installChatBubbles, type BubbleItem } from "./ui/chatBubbles";
+import { dialogueEdge, installDialogueBox } from "./ui/dialogueBox";
 import { installBuildMode } from "./ui/buildMode";
 import { cameraActionForKey, type CameraAction } from "./ui/keys";
 import { renderTopBar } from "./ui/topbar";
@@ -33,7 +37,8 @@ const packs = await loadPacks(artJson.packs, async (url) => {
   if (!res.ok) throw new Error(`${res.status}`);
   return res.json();
 }, (msg) => console.warn(msg));
-const view = createDiorama(map, game.town, createArtRegistry(BUILTIN_IDS, packs));
+const registry = createArtRegistry(BUILTIN_IDS, packs);
+const view = createDiorama(map, game.town, registry);
 if (!view) {
   byId("no-webgl").hidden = false;
   byId("turn").hidden = true;
@@ -127,6 +132,42 @@ if (!view) {
     applyCamera: apply,
   });
 
+  // ---- Talking: the dialogue box and the chat bubbles, drawn from sim state each frame.
+  const dialogue = installDialogueBox(byId("dialogue"), byId("dialogue-live"), () => game.command("advanceDialogue"));
+  const bubbles = installChatBubbles(byId("bubbles"));
+  const onScreen = (id: number): { x: number; y: number } | null => {
+    const h = view.headOf(id);
+    return h ? view.screenOf(h.x, h.y, h.z) : null;
+  };
+  const drawTalk = (): void => {
+    const w = game.world;
+    const d = w.dialogue;
+    const who = d ? w.people.find((p) => p.id === d.personId) : undefined;
+    if (d && who) {
+      const ys = [onScreen(0)?.y ?? 0, onScreen(who.id)?.y ?? 0];
+      dialogue.show({
+        name: who.name,
+        portrait: artUrl(registry, who.role === "advisor" ? "portrait.advisor" : `portrait.citizen.${who.look}`),
+        text: d.lines[d.index] ?? "",
+        more: d.index < d.lines.length - 1,
+        edge: dialogueEdge(Math.max(...ys), map.clientHeight),
+      });
+    } else {
+      dialogue.hide();
+    }
+    const items: BubbleItem[] = [];
+    if (!d) {
+      for (const p of w.people) {
+        const said = currentChatLine(p);
+        const at = said === null ? null : onScreen(p.id);
+        if (said === null || !at) continue;
+        const dist = Math.hypot(p.x - w.princess.x, p.z - w.princess.z);
+        items.push({ id: p.id, x: at.x, y: at.y, content: bubbleContent(said, dist, balance.walk.bubbleWordsRange) });
+      }
+    }
+    bubbles.sync(items);
+  };
+
   const resize = (): void => {
     const s = viewSize(map.clientWidth, map.clientHeight, window.devicePixelRatio);
     view.setSize(s.width, s.height, s.pixelRatio);
@@ -155,6 +196,7 @@ if (!view) {
     // Anything standing between the camera and her (or the build highlight) fades.
     view.setFocus(build.focusSquares() ?? [{ x: Math.floor(w.princess.x), z: Math.floor(w.princess.z) }]);
     view.render(dt);
+    drawTalk();
     requestAnimationFrame(frame);
   };
   requestAnimationFrame(frame);

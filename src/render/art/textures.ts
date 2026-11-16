@@ -20,6 +20,12 @@ function loadImage(src: string): Promise<HTMLImageElement> {
 
 const svgUrl = (svg: string): string => `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
 
+/** A URL an <img> can show for an art ID: the pack's image, or the built-in drawing as an SVG. */
+export function artUrl(registry: ArtRegistry, id: string): string {
+  const src = registry.resolve(id);
+  return src.kind === "image" ? src.url : svgUrl(drawBuiltin(src.id).svg);
+}
+
 export function createArtTextures(registry: ArtRegistry, maxAnisotropy: number): ArtTextures {
   const images = new Map<string, Promise<HTMLImageElement>>();
   /** One GPU texture per art ID and tiling, shared by every material that uses it. */

@@ -49,6 +49,16 @@
       <ul id="build-list" class="flat__list"></ul>
     </aside>
 
+    <div id="bubbles" class="bubbles" aria-hidden="true"></div>
+
+    <section id="dialogue" class="dialogue" role="dialog" aria-labelledby="dialogue-name" hidden>
+      <img class="dialogue__portrait" alt="" width="76" height="76" />
+      <p class="dialogue__name" id="dialogue-name"></p>
+      <p class="dialogue__line"></p>
+      <svg class="dialogue__more" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9.5 12 15.5 18 9.5" /></svg>
+    </section>
+    <p id="dialogue-live" class="sr-only" aria-live="polite"></p>
+
     <section id="build-tray" class="tray" aria-label="Placing" hidden>
       <p class="tray__what"><strong data-tray="name"></strong> <span data-tray="size"></span></p>
       <p class="tray__reason" data-tray="reason" aria-live="polite"></p>
