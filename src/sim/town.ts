@@ -2,7 +2,7 @@
 // starting town fails at startup with a message naming the field instead of drawing a broken town.
 import { loadBuildingDefs } from "./buildings";
 import { canPlaceBuilding, reachableFromGates } from "./grid";
-import { kindAt, loadTownMap, squareKey } from "./townMap";
+import { cellOf, cellSquares, kindAt, loadTownMap, squareKey } from "./townMap";
 import { createWorld, type Town } from "./world";
 
 const fail = (msg: string): never => {
@@ -16,6 +16,12 @@ export function loadTown(mapJson: unknown, buildingsJson: unknown): Town {
 
   for (const r of map.roads) {
     if (kindAt(map, 0, r.x, r.z) !== "open") fail(`road square ${squareKey(r)} is not on open ground`);
+  }
+  const roadKeys = new Set(map.roads.map(squareKey));
+  for (const r of map.roads) {
+    if (!cellSquares(map, cellOf(map, r.x, r.z)).every((s) => roadKeys.has(squareKey(s)))) {
+      fail(`road square ${squareKey(r)} is not part of a whole road cell`);
+    }
   }
   // Check the start placements one at a time against the starting roads and each other.
   const world = createWorld(0, { map: { ...map, start: [] }, defs });

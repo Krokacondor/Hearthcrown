@@ -3,17 +3,17 @@ import buildingsJson from "../../src/data/buildings.json";
 import mapJson from "../../src/data/map.json";
 import { loadBuildingDefs } from "../../src/sim/buildings";
 import { canPlaceBuilding, canPlaceRoad, canRemoveRoad, type Check } from "../../src/sim/grid";
-import { loadTownMap, type Rot } from "../../src/sim/townMap";
+import { cellOf, cellSquares, loadTownMap, type Rot } from "../../src/sim/townMap";
 import { createWorld, type Town, type World } from "../../src/sim/world";
 
 const town: Town = { map: loadTownMap(mapJson), defs: loadBuildingDefs(buildingsJson) };
 const fresh = (): World => createWorld(7, town);
 
-/** Test helpers that apply a placement only if the rule allows it (the game's commands do this in Task 5). */
+/** Lays the whole road cell holding (x, z), only if the rule allows it (the game's placeRoad does the same). */
 function road(world: World, x: number, z: number): void {
   const c = canPlaceRoad(town, world, x, z);
   if (!c.ok) throw new Error(`road ${x},${z}: ${c.message}`);
-  world.roads.push({ x, z });
+  world.roads.push(...cellSquares(town.map, cellOf(town.map, x, z)));
 }
 function build(world: World, type: string, x: number, z: number, rot: Rot): void {
   const c = canPlaceBuilding(town, world, type, x, z, rot);
@@ -29,10 +29,10 @@ const fails = (c: Check, reason: string, message?: string): void => {
 };
 
 describe("the starting town", () => {
-  it("has the castle and the 78 citizen roads", () => {
+  it("has the castle and the 27 citizen road cells", () => {
     const w = fresh();
-    expect(w.buildings).toEqual([{ id: 1, type: "castle", x: 30, z: 3, rot: 0 }]);
-    expect(w.roads).toHaveLength(78);
+    expect(w.buildings).toEqual([{ id: 1, type: "castle", x: 31, z: 3, rot: 0 }]);
+    expect(w.roads).toHaveLength(108);
     expect(w.wallStage).toBe(0);
   });
 });
@@ -49,10 +49,10 @@ describe("canPlaceBuilding", () => {
     fails(canPlaceBuilding(town, fresh(), "cottage", 5, 19, 0), "outside");
     fails(canPlaceBuilding(town, fresh(), "lodge", 51, 16, 0), "outside");
   });
-  it("refuses roads, the plaza, the quest board and other buildings", () => {
+  it("refuses roads, the plaza, the forecourt and other buildings", () => {
     fails(canPlaceBuilding(town, fresh(), "cottage", 20, 19, 0), "blocked", "Something is in the way");
     fails(canPlaceBuilding(town, fresh(), "cottage", 33, 17, 0), "blocked");
-    fails(canPlaceBuilding(town, fresh(), "cottage", 34, 7, 0), "blocked");
+    fails(canPlaceBuilding(town, fresh(), "cottage", 35, 7, 0), "blocked");
     const w = fresh();
     build(w, "cottage", 20, 18, 0);
     fails(canPlaceBuilding(town, w, "familyHome", 19, 18, 0), "blocked");
@@ -61,14 +61,17 @@ describe("canPlaceBuilding", () => {
     fails(canPlaceBuilding(town, fresh(), "castle", 20, 10, 0), "wrongSite", "The castle belongs on the castle grounds");
   });
   it("accepts a door on any of its squares facing a road", () => {
-    expect(canPlaceBuilding(town, fresh(), "familyHome", 22, 20, 2)).toEqual({ ok: true });
+    expect(canPlaceBuilding(town, fresh(), "familyHome", 22, 21, 2)).toEqual({ ok: true });
     expect(canPlaceBuilding(town, fresh(), "manor", 22, 17, 0)).toEqual({ ok: true });
+  });
+  it("lets a building's door open onto the forecourt", () => {
+    expect(canPlaceBuilding(town, fresh(), "cottage", 30, 7, 3)).toEqual({ ok: true });
   });
   it("refuses a turned building whose door or cells poke past the wall", () => {
     // A lodge turned to face east at x 51..52: its door square in front is the wall at x 53.
-    fails(canPlaceBuilding(town, fresh(), "lodge", 51, 20, 3), "noRoad");
+    fails(canPlaceBuilding(town, fresh(), "lodge", 51, 21, 3), "noRoad");
     // Turned to face west with its cells at x 52..53: the wall.
-    fails(canPlaceBuilding(town, fresh(), "lodge", 52, 20, 1), "outside");
+    fails(canPlaceBuilding(town, fresh(), "lodge", 52, 21, 1), "outside");
   });
   it("refuses unknown building types", () => {
     fails(canPlaceBuilding(town, fresh(), "dragonLair", 20, 18, 0), "blocked");
@@ -76,19 +79,26 @@ describe("canPlaceBuilding", () => {
 });
 
 describe("canPlaceRoad", () => {
-  it("allows a road next to the network", () => {
+  it("allows a whole cell next to the network, from any of its squares", () => {
     expect(canPlaceRoad(town, fresh(), 20, 18)).toEqual({ ok: true });
-    expect(canPlaceRoad(town, fresh(), 34, 8)).toEqual({ ok: true });
+    expect(canPlaceRoad(town, fresh(), 19, 17)).toEqual({ ok: true });
+    expect(canPlaceRoad(town, fresh(), 35, 9)).toEqual({ ok: true });
   });
-  it("must join a road side by side", () => {
+  it("must join a road side by side, not at a corner", () => {
     fails(canPlaceRoad(town, fresh(), 20, 10), "notConnected", "Roads must join a road");
     fails(canPlaceRoad(town, fresh(), 29, 15), "notConnected");
   });
-  it("can't go on a wall, a gate, the plaza or a building", () => {
+  it("can't go on a wall, a gate, the plaza, the forecourt or a building", () => {
     fails(canPlaceRoad(town, fresh(), 12, 10), "outside");
-    fails(canPlaceRoad(town, fresh(), 12, 19), "blocked");
+    fails(canPlaceRoad(town, fresh(), 12, 19), "outside");
     fails(canPlaceRoad(town, fresh(), 33, 17), "blocked");
+    fails(canPlaceRoad(town, fresh(), 35, 7), "blocked");
     fails(canPlaceRoad(town, fresh(), 31, 4), "blocked");
+  });
+  it("refuses a cell with any square blocked", () => {
+    const w = fresh();
+    build(w, "cottage", 21, 18, 0);
+    fails(canPlaceRoad(town, w, 22, 17), "blocked", "Something is in the way");
   });
 });
 
@@ -97,33 +107,30 @@ describe("canRemoveRoad", () => {
     fails(canRemoveRoad(town, fresh(), 20, 19), "cutsOff", "A town gate would be cut off");
   });
   it("won't cut the castle off", () => {
-    // The castle road is two squares wide, so one square can go but not both.
-    const w = fresh();
-    expect(canRemoveRoad(town, w, 32, 15)).toEqual({ ok: true });
-    w.roads = w.roads.filter((r) => !(r.x === 32 && r.z === 15));
-    fails(canRemoveRoad(town, w, 33, 15), "cutsOff", "The Castle would be cut off");
+    fails(canRemoveRoad(town, fresh(), 33, 15), "cutsOff", "The Castle would be cut off");
   });
   it("allows removal once a detour exists", () => {
     const w = fresh();
-    for (const [x, z] of [[19, 18], [20, 18], [21, 18]] as const) road(w, x, z);
-    expect(canRemoveRoad(town, w, 20, 19)).toEqual({ ok: true });
+    for (const [x, z] of [[17, 17], [19, 17], [21, 17]] as const) road(w, x, z);
+    expect(canRemoveRoad(town, w, 20, 20)).toEqual({ ok: true });
   });
   it("allows trimming a dead end but not leaving a floating piece", () => {
     const w = fresh();
-    for (const [x, z] of [[20, 18], [20, 17], [20, 16]] as const) road(w, x, z);
-    expect(canRemoveRoad(town, w, 20, 16)).toEqual({ ok: true });
-    fails(canRemoveRoad(town, w, 20, 17), "cutsOff", "Part of the road would be cut off");
+    for (const [x, z] of [[20, 18], [20, 16], [20, 14]] as const) road(w, x, z);
+    expect(canRemoveRoad(town, w, 20, 14)).toEqual({ ok: true });
+    fails(canRemoveRoad(town, w, 20, 16), "cutsOff", "Part of the road would be cut off");
   });
   it("names a building that would lose its road", () => {
     const w = fresh();
-    for (const [x, z] of [[19, 20], [19, 21], [20, 21], [21, 21], [21, 20]] as const) road(w, x, z);
-    build(w, "cottage", 20, 20, 2);
-    fails(canRemoveRoad(town, w, 20, 19), "cutsOff", "The Cottage would be cut off");
-    build(w, "cottage", 20, 18, 0);
-    fails(canRemoveRoad(town, w, 20, 19), "cutsOff", "The Cottage and 1 more would be cut off");
+    for (const [x, z] of [[19, 17], [19, 15]] as const) road(w, x, z);
+    build(w, "cottage", 19, 14, 0);
+    fails(canRemoveRoad(town, w, 19, 15), "cutsOff", "The Cottage would be cut off");
+    build(w, "cottage", 21, 17, 1);
+    fails(canRemoveRoad(town, w, 19, 17), "cutsOff", "The Cottage and 1 more would be cut off");
   });
-  it("keeps the plaza and gates", () => {
-    fails(canRemoveRoad(town, fresh(), 33, 18), "permanent", "The plaza and gates stay");
+  it("keeps the plaza, the forecourt and the gates", () => {
+    fails(canRemoveRoad(town, fresh(), 34, 18), "permanent", "The plaza and gates stay");
+    fails(canRemoveRoad(town, fresh(), 31, 7), "permanent");
     fails(canRemoveRoad(town, fresh(), 12, 19), "permanent");
   });
   it("needs a road to remove", () => {

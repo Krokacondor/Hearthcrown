@@ -25,7 +25,7 @@ describe("debug hook", () => {
   it("cmd can lay a road that getState then counts", () => {
     const hook = createDebugHook(createGame(7));
     expect(hook.cmd("placeRoad", { x: 20, z: 18 })).toEqual({ ok: true });
-    expect(hook.getState().roads).toBe(79);
+    expect(hook.getState().roads).toBe(28);
   });
 });
 

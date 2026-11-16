@@ -20,19 +20,25 @@ describe("loadTown", () => {
 
   it("names a start placement that breaks the placement rules", () => {
     const m = map();
-    m.start[0].x = 29; // half off the castle grounds
-    expect(() => loadTown(m, buildingsJson)).toThrow(/map\.json: start\[0\] \(castle at 29,3\)/);
+    m.start[0].x = 30; // half off the castle grounds
+    expect(() => loadTown(m, buildingsJson)).toThrow(/map\.json: start\[0\] \(castle at 30,3\)/);
   });
 
   it("names a starting road that sits on the plaza, a gate or the castle grounds", () => {
     const m = map();
-    m.roads.push({ from: [33, 17], to: [33, 17] });
+    m.roads.push({ from: [33, 17], to: [34, 17] }, { from: [33, 18], to: [34, 18] });
     expect(() => loadTown(m, buildingsJson)).toThrow(/map\.json: road square 33,17 is not on open ground/);
   });
 
   it("names a starting road that doesn't join the network", () => {
     const m = map();
-    m.roads.push({ from: [20, 8], to: [20, 9] });
-    expect(() => loadTown(m, buildingsJson)).toThrow(/map\.json: road square 20,8 does not join the roads from the gates/);
+    m.roads.push({ from: [19, 7], to: [20, 7] }, { from: [19, 8], to: [20, 8] });
+    expect(() => loadTown(m, buildingsJson)).toThrow(/map\.json: road square 19,7 does not join the roads from the gates/);
+  });
+
+  it("names a starting road that covers only part of a road cell", () => {
+    const m = map();
+    m.roads.push({ from: [19, 17], to: [20, 17] });
+    expect(() => loadTown(m, buildingsJson)).toThrow(/map\.json: road square 19,17 is not part of a whole road cell/);
   });
 });

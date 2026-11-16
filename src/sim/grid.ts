@@ -1,6 +1,6 @@
 // Placement rules for buildings and roads, and the no-stranding rule for removing roads (PLAN.md 3).
 import { footprint } from "./buildings";
-import { kindAt, squareKey, type Gate, type Rot, type Square } from "./townMap";
+import { cellOf, cellSquares, kindAt, squareKey, type Gate, type Rot, type Square } from "./townMap";
 import type { Town, World } from "./world";
 
 export type Reason =
@@ -26,20 +26,21 @@ function occupied(town: Town, world: World): Set<string> {
   return out;
 }
 
-/** The plaza and the current gates: always road, never removable. */
+/** The plaza, the castle forecourt and the current gates: always road, never removable. */
 function permanentRoad(town: Town, world: World, x: number, z: number): boolean {
   const k = kindAt(town.map, world.wallStage, x, z);
-  return k === "plaza" || k === "gate";
+  return k === "plaza" || k === "forecourt" || k === "gate";
 }
 
-/** Every square people can walk on: laid roads, the plaza and the current gates. */
-function networkSquares(town: Town, world: World, without?: Square): Set<string> {
+/** Every square people can walk on: laid roads, the plaza, the forecourt and the current gates. */
+export function networkSquares(town: Town, world: World, without: readonly Square[] = []): Set<string> {
   const out = new Set<string>();
   for (const r of world.roads) out.add(squareKey(r));
-  const { plaza } = town.map;
-  for (let z = plaza.z0; z <= plaza.z1; z++) for (let x = plaza.x0; x <= plaza.x1; x++) out.add(`${x},${z}`);
+  for (const rect of [town.map.plaza, town.map.forecourt]) {
+    for (let z = rect.z0; z <= rect.z1; z++) for (let x = rect.x0; x <= rect.x1; x++) out.add(`${x},${z}`);
+  }
   for (const g of town.map.stages[world.wallStage]?.gates ?? []) for (const s of g.squares) out.add(squareKey(s));
-  if (without) out.delete(squareKey(without));
+  for (const s of without) out.delete(squareKey(s));
   return out;
 }
 
@@ -65,13 +66,17 @@ export function canPlaceBuilding(town: Town, world: World, type: string, x: numb
   return OK;
 }
 
+/** Roads are laid as whole 2×2 road cells: (x, z) picks the cell that holds it. */
 export function canPlaceRoad(town: Town, world: World, x: number, z: number): Check {
-  const kind = kindAt(town.map, world.wallStage, x, z);
-  if (kind === "outside" || kind === "wall") return OUTSIDE();
-  if (kind !== "open") return BLOCKED();
-  const key = `${x},${z}`;
-  if (occupied(town, world).has(key) || world.roads.some((r) => r.x === x && r.z === z)) return BLOCKED();
-  if (!touchesAny(networkSquares(town, world), x, z)) return no("notConnected", "Roads must join a road");
+  const cell = cellSquares(town.map, cellOf(town.map, x, z));
+  const kinds = cell.map((s) => kindAt(town.map, world.wallStage, s.x, s.z));
+  if (kinds.some((k) => k === "outside" || k === "wall")) return OUTSIDE();
+  if (kinds.some((k) => k !== "open")) return BLOCKED();
+  const taken = occupied(town, world);
+  const roads = new Set(world.roads.map(squareKey));
+  if (cell.some((s) => taken.has(squareKey(s)) || roads.has(squareKey(s)))) return BLOCKED();
+  const network = networkSquares(town, world);
+  if (!cell.some((s) => touchesAny(network, s.x, s.z))) return no("notConnected", "Roads must join a road");
   return OK;
 }
 
@@ -82,9 +87,11 @@ export function reachableFromGates(town: Town, world: World): Set<string> {
 
 export function canRemoveRoad(town: Town, world: World, x: number, z: number): Check {
   if (permanentRoad(town, world, x, z)) return no("permanent", "The plaza and gates stay");
-  if (!world.roads.some((r) => r.x === x && r.z === z)) return no("notRoad", "There's no road here");
+  const cell = cellSquares(town.map, cellOf(town.map, x, z));
+  const roads = new Set(world.roads.map(squareKey));
+  if (!cell.every((s) => roads.has(squareKey(s)))) return no("notRoad", "There's no road here");
 
-  const network = networkSquares(town, world, { x, z });
+  const network = networkSquares(town, world, cell);
   const gates = town.map.stages[world.wallStage]?.gates ?? [];
   // Flood fill from the gates over what would be left.
   const reached = flood(network, gates.flatMap((g) => g.squares));

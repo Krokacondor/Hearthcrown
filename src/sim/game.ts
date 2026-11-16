@@ -3,7 +3,7 @@ import mapJson from "../data/map.json";
 import { canPlaceBuilding, canPlaceRoad, canRemoveRoad, type Check } from "./grid";
 import { createRng, type Rng } from "./rng";
 import { loadTown } from "./town";
-import { inBoard, type Rot } from "./townMap";
+import { cellOf, cellSquares, inBoard, squareKey, type Rot } from "./townMap";
 import { createWorld, type Town, type World } from "./world";
 
 /** Loaded once; bad data fails here at startup with a message naming the file. */
@@ -17,7 +17,7 @@ export interface Snapshot {
   gold: number;
   reputation: number;
   buildings: number;
-  /** Laid road squares (the plaza and gates are not counted). */
+  /** Laid 2×2 road cells (the plaza, forecourt and gates are not counted). */
   roads: number;
   citizens: number;
   adventurers: number;
@@ -69,14 +69,17 @@ export function createGame(seed: number): Game {
       const sq = squareArg(args);
       if (!sq) return { ok: false, error: `placeRoad ${SQUARE_ERROR}` };
       const check = canPlaceRoad(TOWN, world, sq.x, sq.z);
-      if (check.ok) world.roads.push(sq);
+      if (check.ok) world.roads.push(...cellSquares(TOWN.map, cellOf(TOWN.map, sq.x, sq.z)));
       return result(check);
     },
     removeRoad(args) {
       const sq = squareArg(args);
       if (!sq) return { ok: false, error: `removeRoad ${SQUARE_ERROR}` };
       const check = canRemoveRoad(TOWN, world, sq.x, sq.z);
-      if (check.ok) world.roads = world.roads.filter((r) => r.x !== sq.x || r.z !== sq.z);
+      if (check.ok) {
+        const gone = new Set(cellSquares(TOWN.map, cellOf(TOWN.map, sq.x, sq.z)).map(squareKey));
+        world.roads = world.roads.filter((r) => !gone.has(squareKey(r)));
+      }
       return result(check);
     },
     /** Asks whether a placement or removal would be allowed, without changing anything. */
@@ -119,7 +122,7 @@ export function createGame(seed: number): Game {
         gold: world.gold,
         reputation: world.reputation,
         buildings: world.buildings.length,
-        roads: world.roads.length,
+        roads: world.roads.length / 4,
         citizens: world.citizens.length,
         adventurers: world.adventurers.length,
       };
