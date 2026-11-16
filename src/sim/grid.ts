@@ -75,6 +75,11 @@ export function canPlaceRoad(town: Town, world: World, x: number, z: number): Ch
   return OK;
 }
 
+/** Every network square (laid roads, the plaza, the gates) reachable side by side from the current gates. */
+export function reachableFromGates(town: Town, world: World): Set<string> {
+  return flood(networkSquares(town, world), town.map.stages[world.wallStage]?.gates ?? []);
+}
+
 export function canRemoveRoad(town: Town, world: World, x: number, z: number): Check {
   if (permanentRoad(town, world, x, z)) return no("permanent", "The plaza and gates stay");
   if (!world.roads.some((r) => r.x === x && r.z === z)) return no("notRoad", "There's no road here");

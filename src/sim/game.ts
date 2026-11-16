@@ -1,13 +1,13 @@
 import buildingsJson from "../data/buildings.json";
 import mapJson from "../data/map.json";
-import { loadBuildingDefs } from "./buildings";
 import { canPlaceBuilding, canPlaceRoad, canRemoveRoad, type Check } from "./grid";
 import { createRng, type Rng } from "./rng";
-import { inBoard, loadTownMap, type Rot } from "./townMap";
+import { loadTown } from "./town";
+import { inBoard, type Rot } from "./townMap";
 import { createWorld, type Town, type World } from "./world";
 
 /** Loaded once; bad data fails here at startup with a message naming the file. */
-const TOWN: Town = { map: loadTownMap(mapJson), defs: loadBuildingDefs(buildingsJson) };
+const TOWN: Town = loadTown(mapJson, buildingsJson);
 
 /** A plain copy of the headline state. Safe to read and mutate. */
 export interface Snapshot {
