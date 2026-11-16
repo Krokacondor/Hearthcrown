@@ -16,7 +16,7 @@ const LOOKS: Record<string, Look> = {
   "building.cottage.1": { wall: "#f4e3c3", roof: "#d76a4a", shade: "#b9533a", door: "#8a5a3c", trim: "#9ed3f0" },
   "building.familyHome.1": { wall: "#eadbc3", roof: "#5d8fd0", shade: "#4570a8", door: "#5a4a7a", trim: "#9ed3f0" },
   "building.manor.1": { wall: "#f1e7d6", roof: "#6aa457", shade: "#4f8540", door: "#7a4a3c", trim: "#9ed3f0" },
-  "building.lodge.1": { wall: "#e6c9a0", roof: "#a0573a", shade: "#7e4128", door: "#5b3a26", trim: "#f2b233" },
+  "building.lodge.1": { wall: "#e6c9a0", roof: "#a0573a", shade: "#7e4128", door: "#5b3a26", trim: "#fff0c4" },
   "building.castle.1": { wall: "#ece6dc", roof: palette.roofPink, shade: "#d977a0", door: "#8a5a3c", trim: "#fcd0e2" },
 };
 const FACES = ["front", "side", "back", "gable", "roof"] as const;

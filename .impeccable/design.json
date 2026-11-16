@@ -1,55 +1,548 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-11-10T00:00:00Z",
+  "generatedAt": "2026-11-16T16:59:27.667Z",
   "title": "Design System: Hearthcrown",
   "extensions": {
     "colorMeta": {
-      "curtain": { "role": "primary", "displayName": "Curtain Red", "canonical": "#c8324a", "tonalRamp": ["#210002", "#4f0011", "#801027", "#b81f3d", "#e34d5f", "#fd848c", "#ffbebf", "#ffe8e8"] },
-      "pelmet-text": { "role": "primary", "displayName": "Pelmet White", "canonical": "#ffffff", "tonalRamp": ["#0b0b0b", "#262626", "#454545", "#666666", "#898989", "#aeaeae", "#d1d1d1", "#eeeeee"] },
-      "curtain-label": { "role": "primary", "displayName": "Blush Label", "canonical": "#fff2f4", "tonalRamp": ["#0e0a0b", "#2b2425", "#4c4244", "#6e6365", "#918688", "#b6abac", "#d7ced0", "#f3eced"] },
-      "royal": { "role": "secondary", "displayName": "Royal Blue", "canonical": "#2f5fa8", "tonalRamp": ["#000826", "#032454", "#154285", "#3565ae", "#5789d6", "#81aff6", "#b8d3fc", "#e5efff"] },
-      "loved": { "role": "secondary", "displayName": "Loved Pink", "canonical": "#f59ac0", "tonalRamp": ["#1d000d", "#440e2a", "#70254a", "#98466b", "#bf698f", "#e292b3", "#fcbcd5", "#fee8f0"] },
-      "marigold": { "role": "tertiary", "displayName": "Marigold (reserved: right now)", "canonical": "#f2b233", "tonalRamp": ["#150800", "#362200", "#5b3f06", "#845e11", "#b07f1a", "#dba33a", "#f5ca80", "#feeccf"] },
-      "leaf": { "role": "tertiary", "displayName": "Leaf Green (reserved: confirm, not yet applied)", "canonical": "#5aa04a", "tonalRamp": ["#001100", "#0a2f02", "#185305", "#337821", "#579d47", "#83c175", "#b0e1a5", "#d5fbcd"] },
-      "ink": { "role": "neutral", "displayName": "Ink", "canonical": "#3b2a2e", "tonalRamp": ["#10090b", "#2f2325", "#514044", "#746064", "#988387", "#bca8ac", "#dcccd0", "#f7ebed"] },
-      "card": { "role": "neutral", "displayName": "Printed Card", "canonical": "#fffdf8", "tonalRamp": ["#0c0b09", "#272624", "#464541", "#686662", "#8b8984", "#afaeaa", "#d2d1cd", "#efeeec"] },
-      "card-hover": { "role": "neutral", "displayName": "Warm Card", "canonical": "#fff6dc", "tonalRamp": ["#0e0b04", "#2b2617", "#4c4530", "#6e664f", "#918971", "#b5ae98", "#d7d1c0", "#f3eee1"] },
-      "sky": { "role": "neutral", "displayName": "Pale Sky", "canonical": "#cfe3ea", "tonalRamp": ["#060c0f", "#1d292c", "#38484e", "#586970", "#7a8d93", "#a0b1b7", "#c6d4d8", "#e6f1f4"] },
-      "grass": { "role": "neutral", "displayName": "Meadow (world)", "canonical": "#9fcf7c", "tonalRamp": ["#031000", "#152e00", "#2d5007", "#497422", "#6b9948", "#93bd75", "#bcdda5", "#def8cd"] },
-      "grid-line": { "role": "neutral", "displayName": "Grid Line (world)", "canonical": "#8dbf6c", "tonalRamp": ["#021000", "#142e00", "#2b5106", "#477521", "#699947", "#91bd75", "#badea5", "#ddf9cd"] },
-      "tuft": { "role": "neutral", "displayName": "Tuft (world)", "canonical": "#6fae55", "tonalRamp": ["#001000", "#0f2f00", "#205300", "#3a771b", "#5e9c43", "#88c072", "#b4e0a3", "#d8fbcb"] },
-      "base-wood": { "role": "neutral", "displayName": "Base Wood (world)", "canonical": "#b07a4c", "tonalRamp": ["#190500", "#3b1e01", "#663805", "#8c582a", "#b27c4e", "#d4a279", "#f0c8a8", "#ffeada"] },
-      "stage-floor": { "role": "neutral", "displayName": "Stage Floor (world)", "canonical": "#e2bd8b", "tonalRamp": ["#150800", "#372100", "#5c3e0d", "#805f2f", "#a58252", "#c8a87d", "#e6cdab", "#feecd4"] },
-      "stage-plank": { "role": "neutral", "displayName": "Plank Line (world)", "canonical": "#c79a68", "tonalRamp": ["#170700", "#3a1f00", "#613b05", "#865c2a", "#ab7f4e", "#cea67a", "#ebcba8", "#feebd8"] }
+      "curtain": {
+        "role": "primary",
+        "displayName": "Curtain Red",
+        "canonical": "#c8324a",
+        "tonalRamp": [
+          "#210002",
+          "#4f0011",
+          "#801027",
+          "#b81f3d",
+          "#e34d5f",
+          "#fd848c",
+          "#ffbebf",
+          "#ffe8e8"
+        ]
+      },
+      "curtain-deep": {
+        "role": "primary",
+        "displayName": "Deep Curtain (problem text)",
+        "canonical": "#a8253b",
+        "tonalRamp": [
+          "#250001",
+          "#51000b",
+          "#7d0020",
+          "#a6233a",
+          "#cd505d",
+          "#ec7f86",
+          "#ffb3b5",
+          "#ffe7e7"
+        ]
+      },
+      "curtain-label": {
+        "role": "primary",
+        "displayName": "Blush Label",
+        "canonical": "#fff2f4",
+        "tonalRamp": [
+          "#0e0a0b",
+          "#2b2425",
+          "#4c4244",
+          "#6e6365",
+          "#918688",
+          "#b6abac",
+          "#d7ced0",
+          "#f3eced"
+        ]
+      },
+      "pelmet-text": {
+        "role": "primary",
+        "displayName": "Pelmet White",
+        "canonical": "#ffffff",
+        "tonalRamp": [
+          "#0b0b0b",
+          "#262626",
+          "#454545",
+          "#666666",
+          "#898989",
+          "#aeaeae",
+          "#d1d1d1",
+          "#eeeeee"
+        ]
+      },
+      "marigold": {
+        "role": "tertiary",
+        "displayName": "Marigold (reserved: right now)",
+        "canonical": "#f2b233",
+        "tonalRamp": [
+          "#150800",
+          "#362200",
+          "#5b3f06",
+          "#845e11",
+          "#b07f1a",
+          "#dba33a",
+          "#f5ca80",
+          "#feeccf"
+        ]
+      },
+      "royal": {
+        "role": "secondary",
+        "displayName": "Royal Blue",
+        "canonical": "#2f5fa8",
+        "tonalRamp": [
+          "#000826",
+          "#032454",
+          "#154285",
+          "#3565ae",
+          "#5789d6",
+          "#81aff6",
+          "#b8d3fc",
+          "#e5efff"
+        ]
+      },
+      "loved": {
+        "role": "secondary",
+        "displayName": "Loved Pink",
+        "canonical": "#f59ac0",
+        "tonalRamp": [
+          "#1d000d",
+          "#440e2a",
+          "#70254a",
+          "#98466b",
+          "#bf698f",
+          "#e292b3",
+          "#fcbcd5",
+          "#fee8f0"
+        ]
+      },
+      "leaf": {
+        "role": "tertiary",
+        "displayName": "Leaf Green (confirm; world fit fill)",
+        "canonical": "#5aa04a",
+        "tonalRamp": [
+          "#001100",
+          "#0a2f02",
+          "#185305",
+          "#337821",
+          "#579d47",
+          "#83c175",
+          "#b0e1a5",
+          "#d5fbcd"
+        ]
+      },
+      "leaf-button": {
+        "role": "tertiary",
+        "displayName": "Leaf Button (primary action)",
+        "canonical": "#6ab05a",
+        "tonalRamp": [
+          "#001100",
+          "#002f00",
+          "#094f00",
+          "#2a6f17",
+          "#519342",
+          "#7eb672",
+          "#b1d7a9",
+          "#e6f3e2"
+        ]
+      },
+      "leaf-button-hover": {
+        "role": "tertiary",
+        "displayName": "Leaf Button Hover",
+        "canonical": "#7cbd6b",
+        "tonalRamp": [
+          "#001100",
+          "#002e00",
+          "#124e00",
+          "#306e1c",
+          "#569245",
+          "#81b574",
+          "#b3d6aa",
+          "#e6f3e3"
+        ]
+      },
+      "leaf-deep": {
+        "role": "tertiary",
+        "displayName": "Deep Leaf (success text)",
+        "canonical": "#3d7a30",
+        "tonalRamp": [
+          "#001100",
+          "#002e00",
+          "#144d04",
+          "#316e24",
+          "#57914a",
+          "#82b478",
+          "#b4d6ad",
+          "#e6f3e4"
+        ]
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Ink",
+        "canonical": "#3b2a2e",
+        "tonalRamp": [
+          "#10090b",
+          "#2f2325",
+          "#514044",
+          "#746064",
+          "#988387",
+          "#bca8ac",
+          "#dcccd0",
+          "#f7ebed"
+        ]
+      },
+      "ink-faint": {
+        "role": "neutral",
+        "displayName": "Faint Ink (disabled)",
+        "canonical": "#9a8c8f",
+        "tonalRamp": [
+          "#0e0a0b",
+          "#2a2123",
+          "#483c3f",
+          "#675a5d",
+          "#897c7f",
+          "#ada1a4",
+          "#d0c8ca",
+          "#f0edee"
+        ]
+      },
+      "rule": {
+        "role": "neutral",
+        "displayName": "Row Rule",
+        "canonical": "#e4dcd4",
+        "tonalRamp": [
+          "#0d0b08",
+          "#28231f",
+          "#453f39",
+          "#635c55",
+          "#867f78",
+          "#a9a39d",
+          "#cecac5",
+          "#f0eeed"
+        ]
+      },
+      "card": {
+        "role": "neutral",
+        "displayName": "Printed Card",
+        "canonical": "#fffdf8",
+        "tonalRamp": [
+          "#0c0b09",
+          "#272624",
+          "#464541",
+          "#686662",
+          "#8b8984",
+          "#afaeaa",
+          "#d2d1cd",
+          "#efeeec"
+        ]
+      },
+      "card-hover": {
+        "role": "neutral",
+        "displayName": "Warm Card",
+        "canonical": "#fff6dc",
+        "tonalRamp": [
+          "#0e0b04",
+          "#2b2617",
+          "#4c4530",
+          "#6e664f",
+          "#918971",
+          "#b5ae98",
+          "#d7d1c0",
+          "#f3eee1"
+        ]
+      },
+      "sky": {
+        "role": "neutral",
+        "displayName": "Pale Sky",
+        "canonical": "#cfe3ea",
+        "tonalRamp": [
+          "#060c0f",
+          "#1d292c",
+          "#38484e",
+          "#586970",
+          "#7a8d93",
+          "#a0b1b7",
+          "#c6d4d8",
+          "#e6f1f4"
+        ]
+      },
+      "grass": {
+        "role": "neutral",
+        "displayName": "Meadow (world)",
+        "canonical": "#9fcf7c",
+        "tonalRamp": [
+          "#031000",
+          "#152e00",
+          "#2d5007",
+          "#497422",
+          "#6b9948",
+          "#93bd75",
+          "#bcdda5",
+          "#def8cd"
+        ]
+      },
+      "grid-line": {
+        "role": "neutral",
+        "displayName": "Grid Line (world, build overlay only)",
+        "canonical": "#8dbf6c",
+        "tonalRamp": [
+          "#021000",
+          "#142e00",
+          "#2b5106",
+          "#477521",
+          "#699947",
+          "#91bd75",
+          "#badea5",
+          "#ddf9cd"
+        ]
+      },
+      "tuft": {
+        "role": "neutral",
+        "displayName": "Tuft (world)",
+        "canonical": "#6fae55",
+        "tonalRamp": [
+          "#001000",
+          "#0f2f00",
+          "#205300",
+          "#3a771b",
+          "#5e9c43",
+          "#88c072",
+          "#b4e0a3",
+          "#d8fbcb"
+        ]
+      },
+      "cobble": {
+        "role": "neutral",
+        "displayName": "Cobble (world roads)",
+        "canonical": "#d1bd96",
+        "tonalRamp": [
+          "#110a00",
+          "#2e2208",
+          "#4d3d1d",
+          "#6d5b37",
+          "#907e5a",
+          "#b2a384",
+          "#d4c9b5",
+          "#f2eee6"
+        ]
+      },
+      "dirt": {
+        "role": "neutral",
+        "displayName": "Dirt (world roads)",
+        "canonical": "#e8cf9e",
+        "tonalRamp": [
+          "#120900",
+          "#302100",
+          "#503c10",
+          "#705a2c",
+          "#937d51",
+          "#b5a27c",
+          "#d6c9af",
+          "#f3eee5"
+        ]
+      },
+      "stone": {
+        "role": "neutral",
+        "displayName": "Stone (world walls)",
+        "canonical": "#d9d2c8",
+        "tonalRamp": [
+          "#0d0b08",
+          "#27231e",
+          "#443f37",
+          "#635d54",
+          "#857f76",
+          "#a9a49c",
+          "#cecac5",
+          "#efeeec"
+        ]
+      },
+      "base-wood": {
+        "role": "neutral",
+        "displayName": "Base Wood (world)",
+        "canonical": "#b07a4c",
+        "tonalRamp": [
+          "#190500",
+          "#3b1e01",
+          "#663805",
+          "#8c582a",
+          "#b27c4e",
+          "#d4a279",
+          "#f0c8a8",
+          "#ffeada"
+        ]
+      },
+      "stage-floor": {
+        "role": "neutral",
+        "displayName": "Stage Floor (world)",
+        "canonical": "#e2bd8b",
+        "tonalRamp": [
+          "#150800",
+          "#372100",
+          "#5c3e0d",
+          "#805f2f",
+          "#a58252",
+          "#c8a87d",
+          "#e6cdab",
+          "#feecd4"
+        ]
+      },
+      "stage-plank": {
+        "role": "neutral",
+        "displayName": "Plank Line (world)",
+        "canonical": "#c79a68",
+        "tonalRamp": [
+          "#170700",
+          "#3a1f00",
+          "#613b05",
+          "#865c2a",
+          "#ab7f4e",
+          "#cea67a",
+          "#ebcba8",
+          "#feebd8"
+        ]
+      }
     },
     "typographyMeta": {
-      "display": { "displayName": "Display (crest)", "purpose": "The game name in the pelmet; white fill over a 5px ink keyline painted first (4px when short)." },
-      "headline": { "displayName": "Headline (stat value)", "purpose": "Big top-bar numerals; 24px at heights of 500px and below." },
-      "title": { "displayName": "Title", "purpose": "Card headings in royal blue." },
-      "body": { "displayName": "Body", "purpose": "All running text; tabular numerals; 60ch max in cards." },
-      "label": { "displayName": "Label (stat label)", "purpose": "Tiny uppercase tracked caps over numerals, in blush on curtain; 10px when short." },
-      "hint": { "displayName": "Hint", "purpose": "Key-hint chip action words." },
-      "keycap": { "displayName": "Keycap", "purpose": "Key letters inside hint chips, royal blue." }
+      "display": {
+        "displayName": "Display (crest)",
+        "purpose": "The game name in the pelmet; white fill over a 5px ink keyline painted first (4px when short)."
+      },
+      "headline": {
+        "displayName": "Headline (stat value)",
+        "purpose": "Big top-bar numerals; 24px at heights of 500px and below."
+      },
+      "flat-title": {
+        "displayName": "Flat Title",
+        "purpose": "Title in a flat's royal header; white over a 4px ink keyline painted first; 24px when short."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Card headings in royal blue."
+      },
+      "item-name": {
+        "displayName": "Item Name",
+        "purpose": "What is being placed, in the tray; 19px when short."
+      },
+      "action": {
+        "displayName": "Action",
+        "purpose": "Primary action label (Place) in display type."
+      },
+      "size-tag": {
+        "displayName": "Size Tag",
+        "purpose": "Footprint sizes in flat rows and the tray, royal blue."
+      },
+      "row": {
+        "displayName": "Row",
+        "purpose": "Flat row names; 16px when short."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "All running text; tabular numerals; 60ch max in cards."
+      },
+      "button": {
+        "displayName": "Button",
+        "purpose": "Card button labels and the tray verdict line; verdict 14px when short."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Tiny uppercase tracked caps naming a column once: blush on the pelmet, royal on a flat; 10px when short."
+      }
     },
     "shadows": [
-      { "name": "paper-lift", "value": "0 3px 10px rgb(59 42 46 / 0.22)", "purpose": "The only UI shadow: lifts floating card pieces (camera buttons, key chips, notice) off the stage. No hard offset block shadows." },
-      { "name": "world-sun", "value": "Three.js DirectionalLight #ffffff intensity 1.35 at (-10, 20, 12), PCF soft shadow map 2048, bias -0.0006; AmbientLight #ffffff 2.1", "purpose": "Real soft shadows in the diorama. Day-cycle light shift (warm dusk, dim night) is planned, not built." }
+      {
+        "name": "paper-lift",
+        "value": "0 3px 10px rgb(59 42 46 / 0.22)",
+        "purpose": "The only UI shadow: lifts floating card pieces (stage buttons, flats, the tray, the notice) off the stage. No hard offset block shadows."
+      },
+      {
+        "name": "world-sun",
+        "value": "Three.js DirectionalLight #ffffff intensity 1.35 at (-10, 20, 12) from the board centre, PCF shadow map 4096, bias -0.0006; AmbientLight #ffffff 2.1",
+        "purpose": "Real soft shadows in the diorama. Day-cycle light shift (warm dusk, dim night) is planned, not built."
+      }
     ],
     "motion": [
-      { "name": "ease-out", "value": "cubic-bezier(0.16, 1, 0.3, 1)", "purpose": "Default easing for all UI state transitions." },
-      { "name": "meter-slide", "value": "left 400ms cubic-bezier(0.16, 1, 0.3, 1)", "purpose": "Loved/Feared thumb moving to a new position." },
-      { "name": "button-press", "value": "transform 160ms, background-color 160ms cubic-bezier(0.16, 1, 0.3, 1)", "purpose": "Card button hover and press." },
-      { "name": "reduced-motion", "value": "transition: none", "purpose": "Under prefers-reduced-motion, meter and buttons snap." }
+      {
+        "name": "ease-out",
+        "value": "cubic-bezier(0.16, 1, 0.3, 1)",
+        "purpose": "Default easing for all UI state transitions."
+      },
+      {
+        "name": "meter-slide",
+        "value": "left 400ms cubic-bezier(0.16, 1, 0.3, 1)",
+        "purpose": "Loved/Feared thumb moving to a new position."
+      },
+      {
+        "name": "button-press",
+        "value": "transform 160ms, background-color 160ms cubic-bezier(0.16, 1, 0.3, 1)",
+        "purpose": "Stage and card button hover and press."
+      },
+      {
+        "name": "flat-on",
+        "value": "420ms cubic-bezier(0.16, 1, 0.3, 1); translateX(105%) to translateX(-6px) rotate(-0.4deg) at 70%, then rest",
+        "purpose": "A panel flat slides on from the right wing with a small paper settle."
+      },
+      {
+        "name": "tray-on",
+        "value": "320ms cubic-bezier(0.16, 1, 0.3, 1); translate(-50%, 140%) to translateX(-50%)",
+        "purpose": "The placing tray slides up from the foot of the stage."
+      },
+      {
+        "name": "building-drop",
+        "value": "0.42s cubic ease-out (1 - p)^3; from 0.7 above the board and 0.12 rad tilt to flat",
+        "purpose": "A newly placed building drops onto the board. The starting town never drops."
+      },
+      {
+        "name": "occluder-fade",
+        "value": "opacity to 0.3, exponential approach (1 - 0.001^dt); ink hidden below 0.6",
+        "purpose": "Walls, gatehouses and buildings blocking the placement footprint fade, and return when the view clears."
+      },
+      {
+        "name": "reduced-motion",
+        "value": "transition: none; animation: none; building drop skipped",
+        "purpose": "Under prefers-reduced-motion, meter and buttons snap, flats and the tray appear in place, and buildings land without dropping."
+      }
     ],
     "breakpoints": [
-      { "name": "short", "value": "(max-height: 500px)", "purpose": "Phones held sideways: 56px pelmet, 16px scallops, tighter type ramp." },
-      { "name": "coarse", "value": "(hover: none) and (pointer: coarse)", "purpose": "Hides camera turn buttons and key hints (camera turning is a PC extra)." },
-      { "name": "min-target", "value": "844x390", "purpose": "Smallest supported viewport, landscape." }
+      {
+        "name": "short",
+        "value": "(max-height: 500px)",
+        "purpose": "Phones held sideways: 56px pelmet, 16px scallops, tighter type ramp (display 22, headline 24, label 10, flat title 24, tray name 19, row 16 with 44px rows, verdict 14)."
+      },
+      {
+        "name": "coarse",
+        "value": "(hover: none) and (pointer: coarse)",
+        "purpose": "Hides the camera turn buttons (camera turning is a PC extra). The Build button stays."
+      },
+      {
+        "name": "min-target",
+        "value": "844x390",
+        "purpose": "Smallest supported viewport, landscape."
+      }
     ],
     "outlines": [
-      { "name": "ui-line", "value": "3px solid #3b2a2e", "purpose": "Every UI piece outline." },
-      { "name": "world-ink", "value": "3.5px screen-space ink lines (#3b2a2e)", "purpose": "Diorama edges: grass rim and wooden base." },
-      { "name": "focus", "value": "outline: 4px solid #f2b233; outline-offset: 2px", "purpose": "Keyboard focus on every focusable element; the map shows a 4px marigold frame below the pelmet instead." }
+      {
+        "name": "ui-line",
+        "value": "3px solid #3b2a2e",
+        "purpose": "Every UI piece outline."
+      },
+      {
+        "name": "world-ink",
+        "value": "3.5px screen-space ink lines (#3b2a2e)",
+        "purpose": "Diorama edges: grass rim, wooden base, wall and gatehouse boxes, building wall boxes and roof outlines, and road edges only where road meets grass."
+      },
+      {
+        "name": "row-rule",
+        "value": "border-top: 2px solid #e4dcd4",
+        "purpose": "The one divider between flat rows; none above the first row."
+      },
+      {
+        "name": "disabled",
+        "value": "3px solid #9a8c8f",
+        "purpose": "Outline and text of a disabled control."
+      },
+      {
+        "name": "focus",
+        "value": "outline: 4px solid #f2b233; outline-offset: 2px",
+        "purpose": "Keyboard focus on every focusable element (flat rows draw it inside, offset -4px); the map shows a 4px marigold frame below the pelmet instead, hidden while placing."
+      },
+      {
+        "name": "placement-footprint",
+        "value": "4.5px screen-space marigold (#f2b233) lines",
+        "purpose": "Outer edge of the placement footprint; leaf or curtain fill beneath at 0.72 opacity."
+      }
     ]
   },
   "components": [
@@ -70,20 +563,44 @@
       "css": ".ds-meter { --pos: 50%; position: relative; display: block; width: 170px; height: 14px; margin: 12px; border: 3px solid #3b2a2e; border-radius: 9px; background: linear-gradient(#3b2a2e, #3b2a2e) 50% 0 / 3px 100% no-repeat, linear-gradient(90deg, #f59ac0 50%, #2f5fa8 50%); } .ds-meter::after { content: \"\"; position: absolute; top: -7px; left: calc(var(--pos) - 6px); width: 12px; height: 22px; background: #fffdf8; border: 3px solid #3b2a2e; border-radius: 4px; transition: left 400ms cubic-bezier(0.16, 1, 0.3, 1); }"
     },
     {
-      "name": "Camera Turn Button",
+      "name": "Stage Button",
       "kind": "button",
-      "refersTo": "turn-button",
-      "description": "Round printed-card icon button with ink line icon; PC extra, hidden on coarse pointers.",
-      "html": "<button type=\"button\" class=\"ds-turn\" aria-label=\"Turn camera left\"><svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M5 12a7 7 0 1 0 2.1-5\" /><path d=\"M7.5 2.5 7.1 7l4.4.6\" /></svg></button>",
-      "css": ".ds-turn { width: 52px; height: 52px; display: grid; place-items: center; padding: 0; border: 3px solid #3b2a2e; border-radius: 50%; background: #fffdf8; color: #3b2a2e; box-shadow: 0 3px 10px rgb(59 42 46 / 0.22); cursor: pointer; transition: transform 160ms cubic-bezier(0.16, 1, 0.3, 1), background-color 160ms cubic-bezier(0.16, 1, 0.3, 1); } .ds-turn:hover { background: #fff6dc; } .ds-turn:active { transform: translateY(2px) scale(0.96); } .ds-turn:focus-visible { outline: 4px solid #f2b233; outline-offset: 2px; } .ds-turn svg { width: 26px; height: 26px; fill: none; stroke: currentColor; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }"
+      "refersTo": "stage-button",
+      "description": "Shared 52px round printed-card button resting on the stage: camera turn buttons (PC extra) and the Build button.",
+      "html": "<button type=\"button\" class=\"ds-stage-btn\" aria-label=\"Build\"><svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M3.5 12.5 10 7l6.5 5.5\" /><path d=\"M5.5 11v8.5h9V11\" /><path d=\"M8.5 19.5V15h3v4.5\" /><path d=\"m15.5 3.5 4 4\" /><path d=\"M17.5 5.5 21 2\" /><path d=\"m14 9 3.5-3.5\" /></svg></button>",
+      "css": ".ds-stage-btn { width: 52px; height: 52px; display: grid; place-items: center; padding: 0; border: 3px solid #3b2a2e; border-radius: 50%; background: #fffdf8; color: #3b2a2e; box-shadow: 0 3px 10px rgb(59 42 46 / 0.22); cursor: pointer; transition: transform 160ms cubic-bezier(0.16, 1, 0.3, 1), background-color 160ms cubic-bezier(0.16, 1, 0.3, 1); } .ds-stage-btn:hover { background: #fff6dc; } .ds-stage-btn:active { transform: translateY(2px) scale(0.96); } .ds-stage-btn:focus-visible { outline: 4px solid #f2b233; outline-offset: 2px; } .ds-stage-btn svg { width: 26px; height: 26px; fill: none; stroke: currentColor; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }"
     },
     {
-      "name": "Key Hint Chip",
-      "kind": "chip",
-      "refersTo": "key-chip",
-      "description": "Printed-card chip naming keyboard controls; desktop only, not interactive.",
-      "html": "<span class=\"ds-keychip\"><kbd>Q</kbd><kbd>E</kbd> Turn</span>",
-      "css": ".ds-keychip { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; background: #fffdf8; color: #3b2a2e; border: 3px solid #3b2a2e; border-radius: 10px; box-shadow: 0 3px 10px rgb(59 42 46 / 0.22); font: 800 14px/1 'Nunito', sans-serif; white-space: nowrap; } .ds-keychip kbd { font: 400 17px/1 'Lilita One', sans-serif; color: #2f5fa8; }"
+      "name": "Card Button",
+      "kind": "button",
+      "refersTo": "card-button",
+      "description": "Rectangular card button inside flats and the tray (Back, Turn), with its disabled state.",
+      "html": "<button type=\"button\" class=\"ds-card-btn\">Back</button> <button type=\"button\" class=\"ds-card-btn\" disabled>Turn</button>",
+      "css": ".ds-card-btn { min-height: 44px; padding: 0 16px; border: 3px solid #3b2a2e; border-radius: 10px; background: #fffdf8; color: #3b2a2e; font: 800 16px/1 'Nunito', sans-serif; cursor: pointer; transition: transform 160ms cubic-bezier(0.16, 1, 0.3, 1), background-color 160ms cubic-bezier(0.16, 1, 0.3, 1); } .ds-card-btn:hover { background: #fff6dc; } .ds-card-btn:active { transform: translateY(2px); } .ds-card-btn:focus-visible { outline: 4px solid #f2b233; outline-offset: 2px; } .ds-card-btn:disabled { cursor: not-allowed; background: #fffdf8; color: #9a8c8f; border-color: #9a8c8f; transform: none; }"
+    },
+    {
+      "name": "Place Button",
+      "kind": "button",
+      "refersTo": "place-button",
+      "description": "The primary action: leaf button fill, ink text in display type.",
+      "html": "<button type=\"button\" class=\"ds-place\">Place</button>",
+      "css": ".ds-place { min-height: 44px; padding: 0 16px; border: 3px solid #3b2a2e; border-radius: 10px; background: #6ab05a; color: #3b2a2e; font: 400 20px/1 'Lilita One', 'Nunito', sans-serif; cursor: pointer; transition: transform 160ms cubic-bezier(0.16, 1, 0.3, 1), background-color 160ms cubic-bezier(0.16, 1, 0.3, 1); } .ds-place:hover { background: #7cbd6b; } .ds-place:active { transform: translateY(2px); } .ds-place:focus-visible { outline: 4px solid #f2b233; outline-offset: 2px; } .ds-place:disabled { cursor: not-allowed; background: #fffdf8; color: #9a8c8f; border-color: #9a8c8f; transform: none; }"
+    },
+    {
+      "name": "Panel Flat",
+      "kind": "card",
+      "refersTo": "flat",
+      "description": "Right-wing card flat with royal header, inked title, Back, column labels said once, rows with one rule, marigold focus, and a wooden groove beneath.",
+      "html": "<aside class=\"ds-flat\"><header class=\"ds-flat__head\"><h2>Build</h2><button type=\"button\" class=\"ds-flat__back\">Back</button></header><div class=\"ds-flat__cols\"><span>What</span><span>Size</span></div><ul class=\"ds-flat__list\"><li><button type=\"button\" class=\"ds-flat__row\"><span>Road</span><span class=\"ds-flat__size\">1×1</span></button></li><li><button type=\"button\" class=\"ds-flat__row\"><span>Cottage</span><span class=\"ds-flat__size\">2×2</span></button></li><li><button type=\"button\" class=\"ds-flat__row\"><span>Manor</span><span class=\"ds-flat__size\">3×3</span></button></li></ul></aside>",
+      "css": ".ds-flat { position: relative; width: 360px; margin: 0 0 20px auto; background: #fffdf8; color: #3b2a2e; border: 3px solid #3b2a2e; border-right: 0; border-radius: 14px 0 0 14px; box-shadow: 0 3px 10px rgb(59 42 46 / 0.22); animation: ds-flat-on 420ms cubic-bezier(0.16, 1, 0.3, 1) both; } .ds-flat::after { content: \"\"; position: absolute; left: 18px; right: 0; bottom: -11px; height: 8px; background: #b07a4c; border: 3px solid #3b2a2e; border-right: 0; border-radius: 4px 0 0 4px; } @keyframes ds-flat-on { 0% { transform: translateX(105%); } 70% { transform: translateX(-6px) rotate(-0.4deg); } 100% { transform: none; } } .ds-flat__head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 14px 12px 22px; background: #2f5fa8; border-bottom: 3px solid #3b2a2e; border-radius: 11px 0 0 0; } .ds-flat__head h2 { margin: 0; font: 400 28px/1 'Lilita One', 'Nunito', sans-serif; color: #fff; -webkit-text-stroke: 4px #3b2a2e; paint-order: stroke fill; } .ds-flat__back { min-height: 44px; padding: 0 16px; border: 3px solid #3b2a2e; border-radius: 10px; background: #fffdf8; color: #3b2a2e; font: 800 16px/1 'Nunito', sans-serif; cursor: pointer; } .ds-flat__back:hover { background: #fff6dc; } .ds-flat__back:focus-visible { outline: 4px solid #f2b233; outline-offset: 2px; } .ds-flat__cols { display: grid; grid-template-columns: 1fr auto; padding: 12px 22px 6px; font: 800 11px/1 'Nunito', sans-serif; letter-spacing: 0.12em; text-transform: uppercase; color: #2f5fa8; } .ds-flat__list { margin: 0; padding: 0 0 8px; list-style: none; } .ds-flat__row { width: 100%; min-height: 48px; display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 12px; padding: 0 22px; border: 0; border-top: 2px solid #e4dcd4; background: transparent; color: #3b2a2e; font: 800 17px/1.2 'Nunito', sans-serif; text-align: left; cursor: pointer; } .ds-flat__list li:first-child .ds-flat__row { border-top-color: transparent; } .ds-flat__row:hover { background: #fff6dc; } .ds-flat__row:focus-visible { outline: 4px solid #f2b233; outline-offset: -4px; } .ds-flat__size { font: 400 18px/1 'Lilita One', 'Nunito', sans-serif; color: #2f5fa8; } @media (prefers-reduced-motion: reduce) { .ds-flat { animation: none; } }"
+    },
+    {
+      "name": "Placing Tray",
+      "kind": "custom",
+      "refersTo": "tray",
+      "description": "Card at the foot of the stage: verdict row above, item name and size with Turn / Place / Back below.",
+      "html": "<section class=\"ds-tray\"><p class=\"ds-tray__what\"><strong>Cottage</strong> <span>2×2</span></p><p class=\"ds-tray__reason\" data-tone=\"problem\">Something is in the way.</p><div class=\"ds-tray__actions\"><button type=\"button\" class=\"ds-tray__btn\">Turn</button><button type=\"button\" class=\"ds-tray__btn ds-tray__btn--place\" disabled>Place</button><button type=\"button\" class=\"ds-tray__btn\">Back</button></div></section>",
+      "css": ".ds-tray { width: min(560px, 100%); display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: \"reason reason\" \"what actions\"; align-items: center; gap: 6px 14px; padding: 10px 12px 10px 18px; background: #fffdf8; color: #3b2a2e; border: 3px solid #3b2a2e; border-radius: 14px; box-shadow: 0 3px 10px rgb(59 42 46 / 0.22); font: 600 16px/1.35 'Nunito', sans-serif; } .ds-tray p { margin: 0; } .ds-tray__what { grid-area: what; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .ds-tray__what strong { font: 400 22px/1 'Lilita One', 'Nunito', sans-serif; } .ds-tray__what span { font: 400 18px/1 'Lilita One', 'Nunito', sans-serif; color: #2f5fa8; margin-left: 4px; } .ds-tray__reason { grid-area: reason; font-weight: 800; line-height: 1.25; } .ds-tray__reason[data-tone=\"problem\"] { color: #a8253b; } .ds-tray__reason[data-tone=\"success\"] { color: #3d7a30; } .ds-tray__actions { grid-area: actions; display: flex; gap: 8px; } .ds-tray__btn { min-height: 44px; padding: 0 16px; border: 3px solid #3b2a2e; border-radius: 10px; background: #fffdf8; color: #3b2a2e; font: 800 16px/1 'Nunito', sans-serif; cursor: pointer; } .ds-tray__btn:hover { background: #fff6dc; } .ds-tray__btn:focus-visible { outline: 4px solid #f2b233; outline-offset: 2px; } .ds-tray__btn--place { background: #6ab05a; font: 400 20px/1 'Lilita One', 'Nunito', sans-serif; } .ds-tray__btn--place:hover { background: #7cbd6b; } .ds-tray__btn:disabled { cursor: not-allowed; background: #fffdf8; color: #9a8c8f; border-color: #9a8c8f; transform: none; }"
     },
     {
       "name": "Notice Card",
@@ -96,7 +613,7 @@
   ],
   "narrative": {
     "northStar": "The Toy Theatre",
-    "overview": "The kingdom is a paper stage. The papercraft diorama town is the stage floor and owns the whole window; the interface is theatre trim around its edges. M0 builds the first of that trim: a curtain-red pelmet with a scalloped hem across the top, carrying the kingdom's name and its numbers, and small white printed-card pieces (camera buttons, key hints, a fallback notice) resting on the stage. Everything, chrome and world alike, reads as printed card stock: flat hand-coloured fills, one dark ink outline, and soft paper shadows.\n\nThe feel is bright, warm and readable: a storybook kingdom made of simple shapes. Density is low; the town comes first and the chrome second. Big numerals over tiny capital labels let the player read their day at a glance. The world refuses the category default of parchment scrolls in carved wood frames; the wood here is a toy stage's base and floorboards, not ornament.\n\nThe diorama sits on an ink-edged wooden board (base wood) standing on a plank stage floor, lit by a white sun with real soft shadows over a pale sky. Grass carries a faint tile grid and fixed-seed tufts, so the board looks the same on every load.",
+    "overview": "The kingdom is a paper stage. The papercraft diorama town is the stage floor and owns the whole window; the interface is theatre trim around its edges. M0 built the first of that trim: a curtain-red pelmet with a scalloped hem across the top, carrying the kingdom's name and its numbers, and round printed-card buttons resting on the stage. M1 added the first panel flat (the Build list, sliding on from the right wing in its wooden groove) and the placing tray at the foot of the stage. Everything, chrome and world alike, reads as printed card stock: flat hand-coloured fills, one dark ink outline, and soft paper shadows.\n\nThe feel is bright, warm and readable: a storybook kingdom made of simple shapes. Density is low; the town comes first and the chrome second. Big numerals over tiny capital labels let the player read their day at a glance. The world refuses the category default of parchment scrolls in carved wood frames; the wood here is a toy stage's base, floorboards and the grooves the flats run in, not ornament.\n\nThe diorama sits on an ink-edged wooden board (base wood) standing on a plank stage floor, lit by a white sun with real soft shadows over a pale sky. Inside stone walls with gatehouses lie a flagstone plaza, cobble and dirt roads, a statue and a quest board as camera-facing cut-outs, and papercraft buildings folded from drawn panels. Grass carries fixed-seed tufts, so the board looks the same on every load; the square grid appears only while building.",
     "keyCharacteristics": [
       "One ink colour outlines everything, in the UI and in the 3D world.",
       "Flat fills only; colour changes are hard edges, never blends.",
@@ -106,19 +623,46 @@
       "Keyboard first, with a visible marigold focus on everything focusable."
     ],
     "rules": [
-      { "name": "The Right Now Rule", "body": "Marigold (#f2b233) marks only what the player is doing right now: keyboard focus, the placement ghost, the chosen route. If an element is marigold while idle, it is wrong.", "section": "colors" },
-      { "name": "The One Ink Rule", "body": "Ink (#3b2a2e) is the only outline colour, for the UI and the world. No grey borders, no coloured strokes, no second ink.", "section": "colors" },
-      { "name": "The Flat Fill Rule", "body": "Fills are flat. Where CSS gradients appear (the meter halves, the scallops) they are hard stops used to draw shapes, never blends. No soft colour gradients anywhere.", "section": "colors" },
-      { "name": "The Big Number, Tiny Label Rule", "body": "Top-bar readouts are large display numerals over a tiny uppercase label. The label names the column once; it is never repeated per row.", "section": "typography" },
-      { "name": "The Stage Owns the Screen Rule", "body": "Chrome lives on the edges; the town is never boxed in or covered by a frame.", "section": "layout" },
-      { "name": "The Soft Shadow Rule", "body": "Shadows are soft and ink-tinted only. No hard offset block shadows.", "section": "elevation" }
+      {
+        "name": "The Right Now Rule",
+        "body": "Marigold (#f2b233) marks only what the player is doing right now: keyboard focus, the placement footprint, the chosen route. If an element is marigold while idle, it is wrong. When two right-now signals would compete, one steps aside: while placing, the map's focus frame hides and the footprint outline carries the focus.",
+        "section": "colors"
+      },
+      {
+        "name": "The One Ink Rule",
+        "body": "Ink (#3b2a2e) is the only outline colour, for the UI and the world. No grey borders, no coloured strokes, no second ink. The two ink tints are part of the same ink, not new colours: the row rule divides rows inside a flat, and faint ink outlines a disabled control.",
+        "section": "colors"
+      },
+      {
+        "name": "The Flat Fill Rule",
+        "body": "Fills are flat. Where CSS gradients appear (the meter halves, the scallops) they are hard stops used to draw shapes, never blends. No soft colour gradients anywhere.",
+        "section": "colors"
+      },
+      {
+        "name": "The Big Number, Tiny Label Rule",
+        "body": "Readouts are large display type over a tiny uppercase label. The label names the column once; it is never repeated per row.",
+        "section": "typography"
+      },
+      {
+        "name": "The Stage Owns the Screen Rule",
+        "body": "Chrome lives on the edges; the town is never boxed in or covered by a frame.",
+        "section": "layout"
+      },
+      {
+        "name": "The Soft Shadow Rule",
+        "body": "Shadows are soft and ink-tinted only. No hard offset block shadows.",
+        "section": "elevation"
+      }
     ],
     "dos": [
       "Do outline every UI piece and world edge in ink (#3b2a2e): 3px in the UI, 3.5px in the world.",
-      "Do keep marigold (#f2b233) for what the player is doing right now: focus, placement ghost, chosen route.",
+      "Do keep marigold (#f2b233) for what the player is doing right now: focus, placement footprint, chosen route.",
       "Do give every focusable element a visible 4px marigold focus outline.",
       "Do set stat labels in blush (#fff2f4) on curtain red (#c8324a), as tiny tracked caps over big numerals.",
       "Do use the single paper-lift shadow (0 3px 10px rgb(59 42 46 / 0.22)) for floating card pieces.",
+      "Do use the shared 52px round stage button for anything resting on the stage.",
+      "Do put a flat's primary action in leaf button with ink text, and write success and problem text in deep leaf and deep curtain.",
+      "Do keep a verdict on its own row so the buttons never move.",
       "Do check every layout at 844x390 landscape.",
       "Do keep camera turning a PC extra, hidden on coarse pointers.",
       "Do keep theatre trim on the edges of the stage and in story moments."
@@ -130,6 +674,8 @@
       "Don't use hard offset block shadows.",
       "Don't put theatre trim inside lists.",
       "Don't make anything hover-only.",
+      "Don't print key hints on screen; keys come from the bindings table.",
+      "Don't paint the build grid into the grass; it shows only while building.",
       "Don't reach for parchment scrolls or carved wood frames."
     ]
   }
