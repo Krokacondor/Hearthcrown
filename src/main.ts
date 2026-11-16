@@ -14,6 +14,7 @@ import { createGame } from "./sim/game";
 import { installBuildMode } from "./ui/buildMode";
 import { cameraActionForKey, type CameraAction } from "./ui/keys";
 import { renderTopBar } from "./ui/topbar";
+import { installWalkMode } from "./ui/walkMode";
 import { pinchSteps, wheelSteps } from "./ui/zoomInput";
 
 const byId = (id: string): HTMLElement => {
@@ -117,6 +118,15 @@ if (!view) {
     followTo: (x, z) => { goalTarget.x = x; goalTarget.z = z; },
   });
 
+  const walk = installWalkMode({
+    game,
+    view,
+    map,
+    cameraStep: () => cam.step,
+    buildOpen: () => build.isOpen(),
+    applyCamera: apply,
+  });
+
   const resize = (): void => {
     const s = viewSize(map.clientWidth, map.clientHeight, window.devicePixelRatio);
     view.setSize(s.width, s.height, s.pixelRatio);
@@ -133,6 +143,7 @@ if (!view) {
     shownZoom += (cam.zoom - shownZoom) * k;
     shownTarget.x += (goalTarget.x - shownTarget.x) * k;
     shownTarget.z += (goalTarget.z - shownTarget.z) * k;
+    walk.poll();
     game.advance(dt);
     const w = game.world;
     view.syncPeople(w, game.snapshot().talkTarget);

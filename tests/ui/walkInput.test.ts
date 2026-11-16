@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { heldToScreen, padEdges, readPad, walkKeyFor, type PadState } from "../../src/ui/walkInput";
+import { heldToScreen, isTap, padEdges, readPad, walkKeyFor, type PadState } from "../../src/ui/walkInput";
 
 const pad = (axes: number[], pressed: number[] = []) => ({
   axes,
@@ -58,5 +58,13 @@ describe("padEdges", () => {
     expect(padEdges(idle, down)).toEqual({ talk: true, turn: 1, zoom: -1 });
     expect(padEdges(down, down)).toEqual({ talk: false, turn: 0, zoom: 0 });
     expect(padEdges(down, idle)).toEqual({ talk: false, turn: 0, zoom: 0 });
+  });
+});
+
+describe("isTap", () => {
+  it("is a short press that barely moved", () => {
+    expect(isTap({ x: 0, y: 0, t: 0 }, { x: 3, y: 4, t: 200 })).toBe(true);
+    expect(isTap({ x: 0, y: 0, t: 0 }, { x: 12, y: 0, t: 200 })).toBe(false);
+    expect(isTap({ x: 0, y: 0, t: 0 }, { x: 0, y: 0, t: 400 })).toBe(false);
   });
 });

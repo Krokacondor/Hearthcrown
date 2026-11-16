@@ -56,3 +56,8 @@ export function padEdges(prev: PadState, next: PadState): { talk: boolean; turn:
     zoom: next.zoom !== 0 && next.zoom !== prev.zoom ? next.zoom : 0,
   };
 }
+
+/** A pointer press that barely moved and was short: a tap or click, not a drag or a long press. */
+export function isTap(down: { x: number; y: number; t: number }, up: { x: number; y: number; t: number }): boolean {
+  return Math.hypot(up.x - down.x, up.y - down.y) <= 8 && up.t - down.t <= 300;
+}
