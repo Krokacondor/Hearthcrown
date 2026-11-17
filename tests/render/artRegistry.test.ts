@@ -102,3 +102,10 @@ describe("placeholder people art", () => {
     expect(fills.size).toBe(people.looks);
   });
 });
+
+describe("the placeholder princess", () => {
+  it("wears a crown that isn't marigold (marigold means 'right now' only)", () => {
+    expect(drawBuiltin("figure.princess").svg.toLowerCase()).not.toContain("#f2b233");
+    expect(drawBuiltin("portrait.princess").svg.toLowerCase()).not.toContain("#f2b233");
+  });
+});

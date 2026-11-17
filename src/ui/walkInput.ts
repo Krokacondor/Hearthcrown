@@ -4,7 +4,7 @@ import pad from "../data/gamepad.json";
 import { actionFor } from "./bindings";
 import type { Arrow } from "./buildInput";
 
-export type WalkKey = { kind: "move"; dir: Arrow } | { kind: "sprint" } | { kind: "talk" };
+export type WalkKey = { kind: "move"; dir: Arrow } | { kind: "sprint" } | { kind: "talk" } | { kind: "back" };
 
 /** Walk keys from the bindings table. Camera and menu keys return null so they pass through. */
 export function walkKeyFor(key: string): WalkKey | null {
@@ -13,6 +13,7 @@ export function walkKeyFor(key: string): WalkKey | null {
     case "up": case "down": case "left": case "right": return { kind: "move", dir: action };
     case "sprint": return { kind: "sprint" };
     case "talk": return { kind: "talk" };
+    case "back": return { kind: "back" };
     default: return null;
   }
 }

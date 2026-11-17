@@ -29,8 +29,8 @@ export interface DioramaView {
   /** Adds and removes roads and buildings to match the world. */
   syncTown(world: Readonly<World>): void;
   setGridVisible(on: boolean): void;
-  /** Moves the paper people to match the world; `talkTarget` gets the marigold marker. */
-  syncPeople(world: Readonly<World>, talkTarget: number | null): void;
+  /** Moves the paper people to match the world; `marked` gets the marigold marker (held still while talking). */
+  syncPeople(world: Readonly<World>, marked: number | null, talking: boolean): void;
   /** The person under a screen point (0 is the princess), or null. */
   pickPerson(clientX: number, clientY: number): number | null;
   /** A world point on screen, in CSS pixels from the canvas's top-left; null when behind the camera. */
@@ -96,6 +96,7 @@ export function createDiorama(container: HTMLElement, town: Town, registry: ArtR
   const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)");
   let synced = false;
   const groundPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
+  const lookAt = new THREE.Vector3();
 
   return {
     setSize(w, h, pixelRatio) {
@@ -110,6 +111,7 @@ export function createDiorama(container: HTMLElement, town: Town, registry: ArtR
       const pose = cameraPose(target, state);
       camera.position.set(...pose.position);
       camera.lookAt(...pose.lookAt);
+      lookAt.set(...pose.lookAt);
       townView.faceCamera((state.step * 2 * Math.PI) / TURN_STEPS);
       people.faceCamera((state.step * 2 * Math.PI) / TURN_STEPS);
     },
@@ -121,8 +123,8 @@ export function createDiorama(container: HTMLElement, town: Town, registry: ArtR
     setGridVisible(on) {
       ground.setGridVisible(on);
     },
-    syncPeople(world, talkTarget) {
-      people.sync(world, talkTarget);
+    syncPeople(world, marked, talking) {
+      people.sync(world, marked, talking);
     },
     pickPerson(clientX, clientY) {
       const rect = renderer.domElement.getBoundingClientRect();
@@ -169,7 +171,10 @@ export function createDiorama(container: HTMLElement, town: Town, registry: ArtR
     },
     render(dt) {
       townView.update(dt);
-      people.update(dt);
+      // World units per screen pixel at the camera's target distance, so the marker keeps its size on screen.
+      const viewH = renderer.domElement.clientHeight || 1;
+      const dist = camera.position.distanceTo(lookAt);
+      people.update(dt, (2 * dist * Math.tan(THREE.MathUtils.degToRad(camera.fov) / 2)) / viewH, reduceMotion.matches);
       const k = 1 - Math.pow(0.001, dt);
       const cam = camera.position.toArray() as [number, number, number];
       for (const o of townView.occluders()) {

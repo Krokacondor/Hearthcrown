@@ -12,14 +12,21 @@ import { palette } from "./palette";
 export const PRINCESS_ID = 0;
 
 const HEIGHT = balance.walk.figureHeight;
+/** The talk marker's size on screen, whatever the zoom: about 14px across. */
+const MARKER_PX = 7;
+const MARKER_R = 0.07;
+/** The invisible card a click or tap hits: wider and taller than the figure, so small people are easy to tap. */
+const HIT_W = 0.8, HIT_H = HEIGHT + 0.45;
 const SHADOW_Y = 0.025;
 /** How fast her hover height eases toward the sim's value, per second. */
 const HOVER_RATE = 12;
 
 export interface PeopleView {
   group: THREE.Group;
-  sync(world: Readonly<World>, talkTarget: number | null): void;
-  update(dt: number): void;
+  /** `marked` gets the marigold marker; `still` holds it still (while talking to them). */
+  sync(world: Readonly<World>, marked: number | null, still: boolean): void;
+  /** `worldPerPixel` keeps the marker the same size on screen; `calm` stops its motion (reduced motion). */
+  update(dt: number, worldPerPixel: number, calm: boolean): void;
   faceCamera(yaw: number): void;
   /** The person under a ray (PRINCESS_ID for her), or null. */
   pick(ray: THREE.Raycaster): number | null;
@@ -34,14 +41,18 @@ export function createPeopleView(art: ArtTextures): PeopleView {
   const figures = new Map<number, Figure>();
   const shadowGeo = new THREE.CircleGeometry(0.17, 20).rotateX(-Math.PI / 2);
   const shadowMat = new THREE.MeshBasicMaterial({ color: palette.ink, transparent: true, opacity: 0.2, depthWrite: false });
-  const marker = new THREE.Mesh(
-    new THREE.OctahedronGeometry(0.07),
-    new THREE.MeshBasicMaterial({ color: palette.marigold }),
-  );
-  marker.scale.y = 1.4;
+  // A marigold diamond with an ink edge (a slightly bigger ink hull drawn behind it), like the rest of the world.
+  const marker = new THREE.Group();
+  const gem = new THREE.OctahedronGeometry(MARKER_R);
+  const inkHull = new THREE.Mesh(gem, new THREE.MeshBasicMaterial({ color: palette.ink, side: THREE.BackSide }));
+  inkHull.scale.setScalar(1.4);
+  marker.add(new THREE.Mesh(gem, new THREE.MeshBasicMaterial({ color: palette.marigold })), inkHull);
   marker.visible = false;
   group.add(marker);
   let markerFor: number | null = null;
+  let markerStill = false;
+  const hitGeo = new THREE.PlaneGeometry(HIT_W, HIT_H).translate(0, HIT_H / 2 - 0.1, 0);
+  const hitMat = new THREE.MeshBasicMaterial({ visible: false });
   let clock = 0;
   let yaw = 0;
 
@@ -56,6 +67,9 @@ export function createPeopleView(art: ArtTextures): PeopleView {
     const card = new THREE.Mesh(geo, mat);
     card.userData.personId = id;
     card.rotation.y = yaw;
+    const hit = new THREE.Mesh(hitGeo, hitMat);
+    hit.userData.personId = id;
+    card.add(hit);
     const shadow = new THREE.Mesh(shadowGeo, shadowMat);
     group.add(card, shadow);
     return { id, art: artId, card, shadow, lift: 0, goalLift: 0 };
@@ -77,7 +91,7 @@ export function createPeopleView(art: ArtTextures): PeopleView {
 
   return {
     group,
-    sync(world, talkTarget) {
+    sync(world, marked, still) {
       const seen = new Set<number>([PRINCESS_ID]);
       place(PRINCESS_ID, "figure.princess", world.princess.x, world.princess.z, world.princess.height);
       for (const p of world.people) {
@@ -85,9 +99,10 @@ export function createPeopleView(art: ArtTextures): PeopleView {
         place(p.id, p.role === "advisor" ? "figure.advisor" : `figure.citizen.${p.look}`, p.x, p.z, 0);
       }
       for (const f of [...figures.values()]) if (!seen.has(f.id)) remove(f);
-      markerFor = talkTarget;
+      markerFor = marked;
+      markerStill = still;
     },
-    update(dt) {
+    update(dt, worldPerPixel, calm) {
       clock += dt;
       const k = 1 - Math.exp(-HOVER_RATE * dt);
       for (const f of figures.values()) {
@@ -98,8 +113,12 @@ export function createPeopleView(art: ArtTextures): PeopleView {
       const target = markerFor === null ? undefined : figures.get(markerFor);
       marker.visible = target !== undefined;
       if (target) {
-        marker.position.set(target.card.position.x, target.lift + HEIGHT + 0.16 + Math.sin(clock * 4) * 0.025, target.card.position.z);
-        marker.rotation.y = clock * 1.5;
+        const scale = Math.max(1, (MARKER_PX * worldPerPixel) / MARKER_R);
+        const moving = !calm && !markerStill;
+        marker.scale.set(scale, scale * 1.4, scale);
+        marker.position.set(target.card.position.x,
+          target.lift + HEIGHT + 0.06 + MARKER_R * scale * 1.4 + (moving ? Math.sin(clock * 4) * 0.025 : 0), target.card.position.z);
+        marker.rotation.y = moving ? clock * 1.5 : Math.PI / 4;
       }
     },
     faceCamera(y) {
@@ -107,7 +126,8 @@ export function createPeopleView(art: ArtTextures): PeopleView {
       for (const f of figures.values()) f.card.rotation.y = y;
     },
     pick(ray) {
-      const hit = ray.intersectObjects([...figures.values()].map((f) => f.card), false)[0];
+      // Test the wide invisible hit cards, not the drawn figures.
+      const hit = ray.intersectObjects([...figures.values()].map((f) => f.card.children[0]!), false)[0];
       const id = hit?.object.userData.personId;
       return typeof id === "number" ? id : null;
     },

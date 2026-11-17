@@ -267,3 +267,16 @@ describe("walking and talking commands", () => {
     expect(s.talkTarget).toBeNull();
   });
 });
+
+describe("closing a dialogue with Back", () => {
+  it("ends it at once and frees the person", () => {
+    const g = createGame(4);
+    const p = g.world.people[0]!;
+    g.command("teleportPrincess", { x: p.x, z: p.z - 1 });
+    g.command("talk");
+    expect(g.command("closeDialogue")).toEqual({ ok: true });
+    expect(g.snapshot().dialogueOpen).toBe(false);
+    expect(p.state).toBe("idle");
+    expect(g.command("closeDialogue")).toEqual({ ok: false, error: "No one is talking" });
+  });
+});

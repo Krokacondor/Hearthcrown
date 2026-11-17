@@ -78,6 +78,8 @@ export function installBuildMode(deps: BuildModeDeps): BuildMode {
 
   // ---- Moving between levels: closed, menu, placing. Back goes up one level.
   function openMenu(): void {
+    // Building waits until the conversation is over, so the tray never sits under the dialogue box.
+    if (game.world.dialogue) return;
     mode = "menu";
     flat.hidden = false;
     tray.hidden = true;

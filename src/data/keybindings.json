@@ -27,6 +27,7 @@
     "left": ["ArrowLeft", "a"],
     "right": ["ArrowRight", "d"],
     "sprint": ["Shift"],
-    "talk": [" ", "Enter"]
+    "talk": [" ", "Enter"],
+    "back": ["Escape"]
   }
 }

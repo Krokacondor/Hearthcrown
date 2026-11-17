@@ -78,3 +78,13 @@ describe("screenToWorld", () => {
 
   it("returns zero for no input", () => expect(screenToWorld(0, 0, 5)).toEqual({ x: 0, z: 0 }));
 });
+
+describe("startCamera on short screens", () => {
+  it("starts closer on a phone held sideways, so people read at a glance", () => {
+    expect(startCamera(390)).toEqual({ step: 0, zoom: cam.startZoomShort });
+    expect(startCamera(500).zoom).toBe(cam.startZoomShort);
+    expect(startCamera(800).zoom).toBe(cam.startZoom);
+    expect(cam.startZoomShort).toBeLessThan(cam.startZoom);
+    expect(cam.startZoomShort).toBeGreaterThanOrEqual(cam.minZoom);
+  });
+});

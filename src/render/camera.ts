@@ -13,8 +13,9 @@ export interface CameraState {
   readonly zoom: number;
 }
 
-export function startCamera(): CameraState {
-  return { step: 0, zoom: cam.startZoom };
+/** The opening view. Phones held sideways (short screens) start closer, so people read at a glance. */
+export function startCamera(viewHeight = Infinity): CameraState {
+  return { step: 0, zoom: viewHeight <= cam.shortScreenHeight ? cam.startZoomShort : cam.startZoom };
 }
 
 const yaw = (step: number): number => (step * 2 * Math.PI) / TURN_STEPS;

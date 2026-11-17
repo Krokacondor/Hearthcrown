@@ -16,7 +16,8 @@ describe("walkKeyFor", () => {
     expect(walkKeyFor("Enter")).toEqual({ kind: "talk" });
   });
   it("lets camera and menu keys pass through", () => {
-    for (const k of ["q", "e", "b", "+", "Escape"]) expect(walkKeyFor(k)).toBeNull();
+    for (const k of ["q", "e", "b", "+"]) expect(walkKeyFor(k)).toBeNull();
+    expect(walkKeyFor("Escape")).toEqual({ kind: "back" });
   });
 });
 

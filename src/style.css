@@ -61,7 +61,7 @@ html, body {
 }
 
 /* While placing, the marigold footprint is the 'right now' signal, so the map's focus frame steps aside. */
-#map.is-placing:focus-visible::after { display: none; }
+#map.is-placing:focus-visible::after, #map.has-marker:focus-visible::after { display: none; }
 
 /* The pelmet: a red valance with a scalloped hem across the top of the stage. */
 .pelmet {
@@ -403,6 +403,28 @@ html, body {
   50% { transform: translateY(3px); }
 }
 
+.dialogue__end {
+  position: absolute;
+  right: 10px;
+  bottom: 8px;
+  width: 22px;
+  height: 22px;
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 3;
+  stroke-linecap: round;
+}
+.dialogue[data-next="more"] .dialogue__end, .dialogue[data-next="end"] .dialogue__more { display: none; }
+.dialogue:hover { background: var(--card-hover); }
+.dialogue.is-leaving { animation: dialogue-out-down 200ms ease-in both; pointer-events: none; }
+.dialogue[data-edge="top"].is-leaving { animation-name: dialogue-out-up; }
+@keyframes dialogue-out-down {
+  to { transform: translate(-50%, 140%); }
+}
+@keyframes dialogue-out-up {
+  to { transform: translate(-50%, -60%); opacity: 0; }
+}
+
 .bubbles {
   position: fixed;
   inset: 0;
@@ -469,7 +491,7 @@ html, body {
   .pelmet::after { background-size: 36px var(--scallop); background-image: radial-gradient(circle at 50% 0, var(--curtain) 13px, var(--ink) 13px 15.5px, transparent 16px); }
   .crest { font-size: 22px; -webkit-text-stroke-width: 4px; }
   .stat dd { font-size: 24px; }
-  .stat dt { font-size: 10px; }
+  .stat dt { font-size: 11px; }
   .flat__head { padding: 8px 10px 8px 18px; }
   .flat__head h2 { font-size: 24px; }
   .flat__row { min-height: 44px; font-size: 16px; }

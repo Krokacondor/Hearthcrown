@@ -176,8 +176,10 @@ function lookFor(who: string): PersonLook | null {
   return m ? CITIZEN_LOOKS[Number(m[1])] ?? null : null;
 }
 
+/** A pale gold, kept clear of marigold, which only ever means "what you are doing right now". */
+const CROWN_GOLD = "#f6e08f";
 const CROWN = (cx: number, top: number, w: number): string =>
-  `<path d="M${cx - w / 2},${top + w * 0.5} L${cx - w * 0.4},${top} L${cx - w * 0.15},${top + w * 0.3} L${cx},${top - w * 0.1} L${cx + w * 0.15},${top + w * 0.3} L${cx + w * 0.4},${top} L${cx + w / 2},${top + w * 0.5} Z" fill="${palette.marigold}" stroke-width="6"/>`;
+  `<path d="M${cx - w / 2},${top + w * 0.5} L${cx - w * 0.4},${top} L${cx - w * 0.15},${top + w * 0.3} L${cx},${top - w * 0.1} L${cx + w * 0.15},${top + w * 0.3} L${cx + w * 0.4},${top} L${cx + w / 2},${top + w * 0.5} Z" fill="${CROWN_GOLD}" stroke-width="6"/>`;
 
 /** A standing paper person: a bell-shaped body and a round head, seen from the front. */
 function figure(who: string, look: PersonLook): Drawing {

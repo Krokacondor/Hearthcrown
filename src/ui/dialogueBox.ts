@@ -30,8 +30,15 @@ export function installDialogueBox(root: HTMLElement, live: HTMLElement, onNext:
   root.prepend(portrait);
   const name = q<HTMLElement>(".dialogue__name");
   const line = q<HTMLElement>(".dialogue__line");
-  const more = q<SVGElement>(".dialogue__more");
   let shown = "";
+  const calm = matchMedia("(prefers-reduced-motion: reduce)");
+  // The slide-away: once it finishes the box is really hidden. Showing again mid-slide cancels it.
+  root.addEventListener("animationend", () => {
+    if (root.classList.contains("is-leaving")) {
+      root.classList.remove("is-leaving");
+      root.hidden = true;
+    }
+  });
 
   root.addEventListener("click", onNext);
 
@@ -47,17 +54,20 @@ export function installDialogueBox(root: HTMLElement, live: HTMLElement, onNext:
       }
       name.textContent = d.name;
       line.textContent = d.text;
-      more.style.visibility = d.more ? "visible" : "hidden";
+      // A bobbing arrow while there is more to read; a quiet ink dash on the last line ("that's all").
+      root.dataset.next = d.more ? "more" : "end";
       root.dataset.edge = d.edge;
+      root.classList.remove("is-leaving");
       root.hidden = false;
       // Announced once per line, not again when the box only flips edge.
       if (!sameLine) live.textContent = `${d.name}: ${d.text}`;
     },
     hide() {
-      if (root.hidden) return;
+      if (root.hidden || root.classList.contains("is-leaving")) return;
       shown = "";
-      root.hidden = true;
       live.textContent = "";
+      if (calm.matches) root.hidden = true;
+      else root.classList.add("is-leaving");
     },
   };
 }

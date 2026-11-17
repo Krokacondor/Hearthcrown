@@ -50,6 +50,7 @@ export function installWalkMode(deps: WalkModeDeps): { poll(): void } {
     e.preventDefault();
     if (k.kind === "move") held.add(k.dir);
     else if (k.kind === "sprint") shift = true;
+    else if (k.kind === "back") { if (game.world.dialogue) game.command("closeDialogue"); }
     else if (!e.repeat) talkOrNext();
   });
   document.addEventListener("keyup", (e) => {
@@ -79,6 +80,10 @@ export function installWalkMode(deps: WalkModeDeps): { poll(): void } {
     const sq = view.pickSquare(e.clientX, e.clientY);
     if (sq) game.command("walkTo", { x: sq.x, z: sq.z });
   };
+  // Right-click is Back (PLAN.md 5.1): it closes an open dialogue. Build mode handles its own.
+  window.addEventListener("contextmenu", (e) => {
+    if (!deps.buildOpen() && game.world.dialogue && (e as PointerEvent).pointerType !== "touch") game.command("closeDialogue");
+  });
   map.addEventListener("pointerup", lift);
   map.addEventListener("pointercancel", lift);
 

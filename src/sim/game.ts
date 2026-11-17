@@ -9,7 +9,7 @@ import { findOpenRoute } from "./openRoute";
 import { assignHomes, createPeople, stepPeople } from "./people";
 import { isSolidSquare, stepPrincess } from "./princess";
 import { createRng, type Rng } from "./rng";
-import { advanceDialogue, endChat, startTalk, talkTarget } from "./talk";
+import { advanceDialogue, closeDialogue, endChat, startTalk, talkTarget } from "./talk";
 import { loadTown } from "./town";
 import { cellOf, cellSquares, inBoard, squareKey, type Rot } from "./townMap";
 import { createWorld, type Town, type World } from "./world";
@@ -214,6 +214,12 @@ export function createGame(seed: number): Game {
     advanceDialogue() {
       if (!world.dialogue) return { ok: false, error: "No one is talking" };
       advanceDialogue(world);
+      return { ok: true };
+    },
+    /** Back while talking: the dialogue closes at once. */
+    closeDialogue() {
+      if (!world.dialogue) return { ok: false, error: "No one is talking" };
+      closeDialogue(world);
       return { ok: true };
     },
     /** Click or tap a spot: she walks there around anything in the way. */

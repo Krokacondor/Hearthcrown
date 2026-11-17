@@ -303,7 +303,7 @@ A warm, hand-coloured toy-theatre palette: one saturated curtain red, one royal 
 - **Button**: card button labels (Back, Turn) and the tray's verdict line, Nunito 800.
 - **Label**: tiny uppercase tracked caps that name a column once: stat labels in blush on the pelmet, column labels (What, Size) in royal on a flat.
 
-At heights of 500px and below (phones held sideways) the ramp tightens: display 22px (keyline 4px), headline 24px, label 10px, flat title 24px, tray item name 19px, flat row 16px, tray verdict 14px.
+At heights of 500px and below (phones held sideways) the ramp tightens: display 22px (keyline 4px), headline 24px, label 11px, flat title 24px, tray item name 19px, flat row 16px, tray verdict 14px, dialogue line 15px.
 
 ### Named Rules
 **The Big Number, Tiny Label Rule.** Readouts are large display type over a tiny uppercase label. The label names the column once; it is never repeated per row.
@@ -312,7 +312,7 @@ At heights of 500px and below (phones held sideways) the ramp tightens: display 
 
 The 3D map is full-bleed and fixed to the window; all chrome floats above it. The pelmet spans the top (76px tall, 22px scallop hem; 56px and 16px at heights of 500px and below), with the crest and stats in one row, gaps clamped between about 18 and 44px. The Build button sits bottom-left and the camera turn buttons bottom-right (10px apart), each inset 20px from the edges and respecting safe-area insets. The fallback notice centres below the pelmet at up to 520px wide.
 
-Panel flats stand on the right wing: flush to the right edge, from 10px below the pelmet hem down to 16px above the bottom, at min(420px, 45vw). The placing tray centres at the foot of the stage, 18px up, at min(560px, 100% minus 288px) so it clears the corner buttons. Only one of flat and tray shows at a time.
+Panel flats stand on the right wing: flush to the right edge, from 10px below the pelmet hem down to 16px above the bottom, at min(420px, 45vw). The placing tray centres at the foot of the stage, 18px up, at min(560px, 100% minus 288px) so it clears the corner buttons. Only one of flat and tray shows at a time. The dialogue box takes the tray's place and size (the Build menu cannot open while she is talking), and moves under the pelmet hem when the speakers stand in the lowest 30% of the view.
 
 There are no on-screen key hints. Every key comes from the bindings table (`src/data/keybindings.json`); a Settings key-bindings screen is planned for M18.
 
@@ -377,6 +377,15 @@ A printed card flat on the right wing. It slides on from off the wing over 420ms
 
 ### Placing tray
 A printed card at the foot of the stage, sliding up over 320ms when placing starts (still under reduced motion). The verdict row sits on top so the buttons below never move when it appears or changes: success in deep leaf, problems in deep curtain, hidden when empty, announced politely to screen readers. Below it, the item name with its size tag on the left, and Turn, Place and Back on the right (Turn is hidden for roads).
+
+### Dialogue box
+A printed card in the tray's slot (M2). Left: the speaker's portrait, a square card with a 3px ink edge and 10px corners (76px; 60px when short). Right: their line in Nunito 600 17px (15px when short), ink on card. Their name sits on a small curtain-red tag pinned over the box's top-left edge, Lilita One 18px in curtain label. Bottom-right: a bobbing ink chevron while there is more to read, a still ink dash on the last line. It slides up over 320ms on the ease-out curve (down from the hem at the top edge) and slides away over 200ms; under reduced motion it appears and goes at once and nothing bobs. Talk, Space/Enter, a click or a tap advances; Esc or right-click closes. Hover is warm card. Each new line is announced politely through a separate live region; focus stays on the map.
+
+### Chat bubbles (world layer)
+Small cards over the current speaker of a townsfolk chat: card fill, a 2px ink edge (lighter than chrome, they belong to the world), 10px corners, a soft 2px-offset shadow, Nunito 800 13px, at most 200px wide, with an ink tail pointing down at the speaker. Within 4 squares of the princess they show the words; farther away, three ink dots rise in turn. Hidden from screen readers, never clickable, and hidden while a dialogue is open.
+
+### Talk marker (world)
+A marigold diamond with an ink hull over the nearest person she can talk to, about 14px across on screen at any zoom. It turns slowly and bobs; it holds still over the person she is talking to, and under reduced motion. While it shows, the map's marigold focus frame steps aside (the Right Now Rule). Placeholder people (M2) are ink-outlined paper cut-outs sized true to the houses, with a soft ground shadow; the princess's crown is pale gold, never marigold.
 
 ### Placement preview (world)
 What the player is placing, drawn on the board:

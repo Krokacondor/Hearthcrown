@@ -45,7 +45,7 @@ if (!view) {
   byId("build-open").hidden = true;
 } else {
   view.syncTown(game.world);
-  let cam: CameraState = startCamera();
+  let cam: CameraState = startCamera(map.clientHeight);
   // Unwrapped turn count, so going from step 7 to 0 animates the short way round.
   let goalTurns = 0;
   let shownTurns = 0;
@@ -187,7 +187,11 @@ if (!view) {
     walk.poll();
     game.advance(dt);
     const w = game.world;
-    view.syncPeople(w, game.snapshot().talkTarget);
+    // The marker sits over whoever she would talk to, or (held still) over the person she is talking to.
+    const marked = w.dialogue ? w.dialogue.personId : game.snapshot().talkTarget;
+    view.syncPeople(w, marked, w.dialogue !== null);
+    // One "right now" signal at a time: the map's focus frame steps aside while the marker shows.
+    map.classList.toggle("has-marker", marked !== null);
     if (!build.isOpen()) {
       goalTarget.x = w.princess.x;
       goalTarget.z = w.princess.z;

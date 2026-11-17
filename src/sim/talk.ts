@@ -70,6 +70,14 @@ export function advanceDialogue(world: World): void {
   }
 }
 
+/** Back: closes the dialogue at once, skipping any lines left. */
+export function closeDialogue(world: World): void {
+  const d = world.dialogue;
+  if (!d) return;
+  d.index = d.lines.length - 1;
+  advanceDialogue(world);
+}
+
 /** What this person is saying in their chat right now, or null if it's the other one's turn (or no chat). */
 export function currentChatLine(p: Person): string | null {
   const c = p.chat;
