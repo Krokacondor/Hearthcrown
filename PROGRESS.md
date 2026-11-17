@@ -75,3 +75,40 @@
 
 **Next:** M2, Paths, walkers, princess.
 
+
+## M2: Walking the town (2026-11-16)
+
+**Built**
+- **Road grid.** Roads are 2 wide, laid as 2×2 pieces on a road grid that starts at the inside corner of the walls (40×32 = 20×16 cells). The starting town moved one square east to line up: 2-wide gates (west, south, east), plaza x31..36 z17..22, castle at (31,3), and a paved forecourt in front of the castle with the quest board standing on it (a prop, not a reserved square). Placement, joining and the no-stranding rule work per cell; the forecourt counts as road and can't be removed. Build mode shows a 2×2 road ghost, moves 2 squares a step and paints whole cells.
+- **Homes** have resident ranges (Cottage 1-2, Family Home 3-5, Manor 4-6); citizens move in up to the top of the range.
+- **Pathfinding** (`sim/route.ts`): walkable road cells, shortest routes (breadth-first Dijkstra), right-hand lanes so people pass side by side.
+- **The princess** (`sim/princess.ts`): rigid moves, diagonals, sprint with hover, slides along buildings, walls, the statue and the quest board, can never leave town. Click or tap a spot to walk there around obstacles (`sim/openRoute.ts`); tap a person to walk over and talk.
+- **Seven townsfolk** (`sim/people.ts`): six citizens and the advisor (Bertram, lives at the castle), placeholder looks, wandering the roads, re-routing when a road is removed, moving into homes as they're built.
+- **Talking** (`sim/talk.ts`): a marigold marker over the nearest person in reach; talk for a one-liner from `data/dialogue.json` (never the same line twice in a row). Townsfolk chat in pairs: bubbles show the words within 4 squares of the princess and dots farther away.
+- **Game**: fixed 1/60 s ticks through `game.advance`, new commands (setWalkInput, advance, teleportPrincess, talk, advanceDialogue, closeDialogue, walkTo, walkToPerson), snapshot adds the princess, housed, dialogueOpen and talkTarget; building on the princess steps her onto the door road. Debug hook adds `people()` and only redraws the town for town changes.
+- **Input**: walk keys and Shift sprint from `data/keybindings.json`, a controller through `data/gamepad.json` (stick, talk, sprint, camera turn and zoom), click/tap to walk or talk, Esc and right-click close a talk. Walking pauses while the Build menu is open, and the Build menu can't open while talking.
+- **Render**: paper placeholder people (code SVG by art ID: `figure.*`, `portrait.*`) facing the camera with ground shadows, hover easing, an ink-edged talk marker kept about 14px on screen, wide invisible tap cards. The camera follows the princess; phones held sideways start closer (zoom 0.8, desktop 1.4).
+- **Dialogue box and chat bubbles** (brief: `docs/design/dialogue-brief.md`), recorded in DESIGN.md.
+- PLAN.md updated: road grid, scale, princess movement, wings later, controller, homes and family rule, Cottage-only start, three cottages in the opening, the advisor, M2/M2b split, map editor moved to M15.
+- 290 unit tests.
+
+**Browser check (Playwright, dev server)**
+- No console errors or warnings at 1280×800 or 844×390.
+- Keyboard only: walking 2.4 squares/s, diagonals, Shift sprint (hover with the shadow left on the ground), up stays "away from the camera" after Q/E, B pauses walking.
+- Stops at x 12.25 at the west gate; slides along a building (unit tested and seen); click to walk; walk-to-person opens the dialogue.
+- Built a Cottage, a Family Home and a Manor from the keyboard: housed 6 (2 in the cottage, 4 in the Family Home). A 2×2 road piece from the keyboard adds one cell; painting with Enter held lays a joined 2-wide road.
+- Talking: the box shows name, portrait and line at both sizes, each line is announced, the second press closes it, Esc closes it, B does nothing while talking. Chats show words close up and dots farther away.
+- Impeccable critique 22/40 (dual-agent), all 5 priority issues fixed; detector clean on the new UI.
+
+**Choices made** (details in the M2 ledger)
+- Click-to-walk routes avoid the squares under the statue and quest board. The dialogue box flips to the top only below 70% of the view. Advisor name "Bertram".
+- Walking speeds 2.4 (walk) and 4.8 (sprint) squares/s: about 17 s to cross the town at a walk. People 1.2 squares/s; chat chance 0.35 with a 20 s cooldown.
+
+**Known issues / left for later**
+- Bubbles for people off screen stay in the page; a bubble at the very edge can show as a sliver. Long bubble lines can wrap with one word on the last line and cover the princess on phones.
+- The statue doesn't fade when it hides the princess. A camera turn mid-line can flip the dialogue box between edges.
+- "Someone is in reach" and overheard chats aren't announced to screen readers; a failed talk is silent.
+- Placeholder figures always show their front (back views and the paper flip are M2b); their ink reads thin at the default zoom.
+- The town size is unchanged (revisit now that walking exists). The clock doesn't run yet (M3).
+
+**Next:** M2b, Paper people.
