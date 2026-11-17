@@ -31,6 +31,7 @@ export function installWalkMode(deps: WalkModeDeps): { poll(): void } {
   let shift = false;
   let lastPad = NO_PAD;
   let sent = "";
+  let building = false;
 
   const talkOrNext = (): void => {
     if (game.world.dialogue) game.command("advanceDialogue");
@@ -90,10 +91,12 @@ export function installWalkMode(deps: WalkModeDeps): { poll(): void } {
   return {
     poll() {
       if (deps.buildOpen()) {
-        send(0, 0, false);
+        // The first frame the Build menu is open: she stops, click-to-walk and all.
+        if (!building) { game.command("stopWalking"); sent = ""; building = true; }
         lastPad = NO_PAD;
         return;
       }
+      building = false;
       const gp = navigator.getGamepads?.().find((g) => g?.connected) ?? null;
       const pad = gp ? readPad(gp) : NO_PAD;
       const edge = padEdges(lastPad, pad);

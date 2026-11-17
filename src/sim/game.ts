@@ -5,9 +5,9 @@ import mapJson from "../data/map.json";
 import peopleJson from "../data/people.json";
 import { footprint } from "./buildings";
 import { canPlaceBuilding, canPlaceRoad, canRemoveRoad, networkSquares, type Check } from "./grid";
-import { findOpenRoute } from "./openRoute";
+import { findOpenRoute, nearestFreeSquare } from "./openRoute";
 import { assignHomes, createPeople, stepPeople } from "./people";
-import { isSolidSquare, stepPrincess } from "./princess";
+import { circleClear, stepPrincess } from "./princess";
 import { createRng, type Rng } from "./rng";
 import { advanceDialogue, closeDialogue, endChat, startTalk, talkTarget } from "./talk";
 import { loadTown } from "./town";
@@ -89,22 +89,32 @@ export function createGame(seed: number): Game {
       startTalk(world, rng, dialogueJson, who.id);
     }
   };
-  /** If a new building covers the princess, step her out onto its door road. */
+  /**
+   * After a new building: if it covers the princess, step her out onto its door road (or the nearest clear spot);
+   * if it stands across her click-to-walk route, plan the route again round it (or drop it).
+   */
   const clearPrincess = (b: World["buildings"][number]): void => {
     const def = TOWN.defs.get(b.type);
     if (!def) return;
     const p = world.princess, r = WALK.princessRadius;
     const { cells, doorFront } = footprint(def, b.x, b.z, b.rot);
-    const covered = cells.some((c) => p.x + r > c.x && p.x - r < c.x + 1 && p.z + r > c.z && p.z - r < c.z + 1);
-    if (!covered) return;
-    const network = networkSquares(TOWN, world);
-    const spots = doorFront.filter((s) => network.has(`${s.x},${s.z}`))
-      .sort((a, c) => Math.hypot(a.x + 0.5 - p.x, a.z + 0.5 - p.z) - Math.hypot(c.x + 0.5 - p.x, c.z + 0.5 - p.z));
-    const to = spots[0];
-    if (!to) return;
-    p.x = to.x + 0.5;
-    p.z = to.z + 0.5;
-    p.route = [];
+    if (!circleClear(TOWN, world, p.x, p.z, r)) {
+      const network = networkSquares(TOWN, world);
+      const spots = doorFront.filter((s) => network.has(`${s.x},${s.z}`))
+        .sort((a, c) => Math.hypot(a.x + 0.5 - p.x, a.z + 0.5 - p.z) - Math.hypot(c.x + 0.5 - p.x, c.z + 0.5 - p.z));
+      const to = spots.find((s) => circleClear(TOWN, world, s.x + 0.5, s.z + 0.5, r))
+        ?? nearestFreeSquare(TOWN, world, { x: Math.floor(p.x), z: Math.floor(p.z) });
+      if (to) { p.x = to.x + 0.5; p.z = to.z + 0.5; }
+      p.route = [];
+      p.talkTo = null;
+      return;
+    }
+    const keys = new Set(cells.map((c) => `${c.x},${c.z}`));
+    if (!p.route.some((w) => keys.has(`${Math.floor(w.x)},${Math.floor(w.z)}`))) return;
+    const goal = p.route.at(-1)!;
+    const again = findOpenRoute(TOWN, world, { x: Math.floor(p.x), z: Math.floor(p.z) }, { x: Math.floor(goal.x), z: Math.floor(goal.z) });
+    p.route = again ? again.map((s) => ({ x: s.x + 0.5, z: s.z + 0.5 })) : [];
+    if (!again) p.talkTo = null;
   };
 
   /** Reads { x, z } as whole squares on the board, or null. */
@@ -185,10 +195,9 @@ export function createGame(seed: number): Game {
       if (!isNum(x) || !isNum(z) || typeof sprint !== "boolean") {
         return { ok: false, error: "setWalkInput needs { x, z } as finite numbers and an optional sprint: true/false" };
       }
+      // Kept even while talking (she stands still until it closes), so a key held through a talk walks at once after.
       const len = Math.hypot(x, z);
-      world.walkInput = world.dialogue || len === 0
-        ? { x: 0, z: 0, sprint: world.dialogue ? false : sprint }
-        : { x: x / len + 0, z: z / len + 0, sprint };
+      world.walkInput = len === 0 ? { x: 0, z: 0, sprint } : { x: x / len + 0, z: z / len + 0, sprint };
       return { ok: true };
     },
     advance(args) {
@@ -200,20 +209,29 @@ export function createGame(seed: number): Game {
     teleportPrincess(args) {
       const { x, z } = args;
       if (!isNum(x) || !isNum(z)) return { ok: false, error: "teleportPrincess needs { x, z } as finite numbers" };
-      if (isSolidSquare(TOWN, world, Math.floor(x), Math.floor(z))) return { ok: false, error: "That spot is blocked" };
+      if (!inBoard(TOWN.map, Math.floor(x), Math.floor(z)) || !circleClear(TOWN, world, x, z, WALK.princessRadius)) {
+        return { ok: false, error: "That spot is blocked" };
+      }
       Object.assign(world.princess, { x, z, route: [], talkTo: null });
       return { ok: true };
     },
     talk() {
       const id = talkTarget(world, WALK.talkRange);
       if (id === null) return { ok: false, error: "Nobody to talk to" };
-      world.walkInput = { x: 0, z: 0, sprint: false };
+      world.princess.route = [];
+      world.princess.talkTo = null;
       startTalk(world, rng, dialogueJson, id);
       return { ok: true };
     },
     advanceDialogue() {
       if (!world.dialogue) return { ok: false, error: "No one is talking" };
       advanceDialogue(world);
+      return { ok: true };
+    },
+    /** Stops a click-to-walk and any pending talk (the Build menu opening). */
+    stopWalking() {
+      Object.assign(world.princess, { route: [], talkTo: null });
+      world.walkInput = { x: 0, z: 0, sprint: false };
       return { ok: true };
     },
     /** Back while talking: the dialogue closes at once. */
@@ -241,6 +259,7 @@ export function createGame(seed: number): Game {
       const p = world.princess;
       if (Math.hypot(who.x - p.x, who.z - p.z) <= WALK.talkRange) {
         p.route = [];
+        p.talkTo = null;
         startTalk(world, rng, dialogueJson, who.id);
         return { ok: true };
       }

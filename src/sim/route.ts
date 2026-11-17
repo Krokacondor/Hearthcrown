@@ -6,7 +6,8 @@ import type { Town, World } from "./world";
 /** Neighbour order: east, west, south, north. It decides ties, so the same request always gets the same route. */
 const STEPS: readonly [number, number][] = [[1, 0], [-1, 0], [0, 1], [0, -1]];
 
-/** Keys of every cell people can walk: laid road cells, the plaza, the castle forecourt and the current gates. */
+/** Keys of every cell people can walk: laid road cells, the plaza (except under the statue), the castle forecourt
+ * and the current gates. */
 export function walkableCells(town: Town, world: World): Set<string> {
   const { map } = town;
   const out = new Set<string>();
@@ -15,6 +16,8 @@ export function walkableCells(town: Town, world: World): Set<string> {
     for (let z = rect.z0; z <= rect.z1; z++) for (let x = rect.x0; x <= rect.x1; x++) out.add(cellKey(cellOf(map, x, z)));
   }
   for (const g of map.stages[world.wallStage]?.gates ?? []) for (const s of g.squares) out.add(cellKey(cellOf(map, s.x, s.z)));
+  // People walk round the statue, not through it; the plaza stays joined as a ring.
+  out.delete(cellKey(cellOf(map, Math.floor(map.statue.x), Math.floor(map.statue.z))));
   return out;
 }
 

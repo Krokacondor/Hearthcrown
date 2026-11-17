@@ -10,14 +10,15 @@ const steps = (r: Cell[]): number[] => r.slice(1).map((c, i) => Math.abs(c.cx - 
 
 describe("walkableCells", () => {
   it("covers laid roads, the plaza, the forecourt and the gates", () => {
-    expect(W.has("10,8")).toBe(true); // plaza
+    expect(W.has("9,8")).toBe(true); // plaza
+    expect(W.has("10,8")).toBe(false); // the statue stands here
     expect(W.has("9,2")).toBe(true); // forecourt
     expect(W.has("-1,8")).toBe(true); // west gate
     expect(W.has("20,8")).toBe(true); // east gate
     expect(W.has("10,16")).toBe(true); // south gate
     expect(W.has("0,8")).toBe(true); // west road
     expect(W.has("0,0")).toBe(false); // grass
-    expect(W.size).toBe(27 + 9 + 3 + 3);
+    expect(W.size).toBe(27 + 8 + 3 + 3);
   });
   it("follows the roads the player lays", () => {
     const g = createGame(1);

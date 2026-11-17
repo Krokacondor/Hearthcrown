@@ -73,6 +73,12 @@ function solidsNear(town: Town, world: World, x: number, z: number, radius: numb
 
 const overlaps = (a0: number, a1: number, b0: number, b1: number): boolean => a0 < b1 - EPS && a1 > b0 + EPS;
 
+/** True when a circle at (x, z) touches nothing solid: no wall, outside square, building or prop. */
+export function circleClear(town: Town, world: World, x: number, z: number, radius: number): boolean {
+  return !solidsNear(town, world, x, z, radius, occupied(town, world))
+    .some((b) => overlaps(x - radius, x + radius, b.x0, b.x1) && overlaps(z - radius, z + radius, b.z0, b.z1));
+}
+
 /**
  * Moves a circle by `delta`, along x first and then z. On each axis it stops at the edge of anything solid,
  * so walking into a wall at an angle slides along it.
@@ -130,8 +136,14 @@ export function stepPrincess(town: Town, world: World, dt: number): void {
     return;
   }
   const moved = moveCircle(town, world, p, { x: dir.x * distance, z: dir.z * distance }, w.princessRadius);
+  const progress = Math.hypot(moved.x - p.x, moved.z - p.z);
   p.x = moved.x;
   p.z = moved.z;
+  // Following a route but blocked (something was built in the way): give up rather than push forever.
+  if (input.x === 0 && input.z === 0 && p.route.length > 0 && progress < distance * 0.1) {
+    p.route = [];
+    p.talkTo = null;
+  }
   p.facing = dir;
   p.sprinting = input.sprint;
   p.height = input.sprint ? w.hoverHeight : 0;

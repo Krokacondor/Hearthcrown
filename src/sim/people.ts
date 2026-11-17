@@ -73,6 +73,8 @@ export function createPeople(town: Town, world: World, rng: Rng, data: PeopleDat
   }
   const places = shuffled(rng, spots);
   const names = shuffled(rng, data.citizenNames);
+  // Looks are dealt like names, so no two citizens dress the same (while there are enough looks).
+  const looks = shuffled(rng, Array.from({ length: data.looks }, (_, i) => i));
   const w = balance.walk;
   const make = (id: number, name: string, role: PersonRole, look: number): Person => {
     const at = cellCenter(map, places[(id - 1) % places.length]!);
@@ -82,7 +84,7 @@ export function createPeople(town: Town, world: World, rng: Rng, data: PeopleDat
     };
   };
   const people: Person[] = [];
-  for (let i = 0; i < data.citizenCount; i++) people.push(make(i + 1, names[i]!, "citizen", rng.int(0, data.looks - 1)));
+  for (let i = 0; i < data.citizenCount; i++) people.push(make(i + 1, names[i]!, "citizen", looks[i % looks.length]!));
   people.push(make(data.citizenCount + 1, data.advisorName, "advisor", -1));
   return people;
 }
@@ -140,13 +142,33 @@ export function stepPeople(town: Town, world: World, rng: Rng, dt: number, lines
   const { map } = town;
   const walkable = walkableCells(town, world);
   const destinations = [...walkable].sort();
+  const cellHere = (p: Person): string => cellKey(cellOf(map, Math.floor(p.x), Math.floor(p.z)));
 
   for (const p of world.people) {
     p.chatCooldown = Math.max(0, p.chatCooldown - dt);
+    // Standing on a road that was just removed (idle, chatting or waiting): end any chat and head back.
+    if (p.state !== "walking" && p.state !== "talking" && !walkable.has(cellHere(p))) {
+      if (p.chat) {
+        const partner = world.people.find((q) => q.id === p.chat!.partner);
+        if (partner?.chat) { partner.chat = null; partner.chatCooldown = w.chatCooldownSeconds; if (partner.state === "chatting") goIdle(partner, rng, w); }
+        p.chat = null;
+        p.chatCooldown = w.chatCooldownSeconds;
+      }
+      const back = nearestWalkable(map, walkable, p.x, p.z);
+      if (back) {
+        p.state = "walking";
+        p.routeCells = [cellKey(back)];
+        p.route = [cellCenter(map, back)];
+      }
+    }
     if (p.state === "idle") {
       p.timer -= dt;
       if (p.timer > 0) continue;
-      const [cx, cz] = rng.pick(destinations).split(",").map(Number) as [number, number];
+      // Somewhere nobody else is standing or heading, so people don't end up stacked on one spot.
+      const taken = new Set(world.people.filter((q) => q !== p)
+        .map((q) => (q.state === "walking" && q.routeCells.length > 0 ? q.routeCells.at(-1)! : cellHere(q))));
+      const open = destinations.filter((k) => !taken.has(k));
+      const [cx, cz] = rng.pick(open.length > 0 ? open : destinations).split(",").map(Number) as [number, number];
       if (!routeTo(map, walkable, p, { cx, cz }, w)) goIdle(p, rng, w);
       continue;
     }
@@ -224,8 +246,8 @@ function stepChats(world: World, rng: Rng, dt: number, lines: DialogueData, w: W
       if (!rng.chance(w.chatChance) || lines.chats.length === 0) break;
       const said = rng.pick(lines.chats);
       const first = Math.min(a.id, b.id);
-      const d = Math.hypot(b.x - a.x, b.z - a.z) || 1;
-      a.facing = { x: (b.x - a.x) / d, z: (b.z - a.z) / d };
+      const d = Math.hypot(b.x - a.x, b.z - a.z);
+      a.facing = d > 1e-6 ? { x: (b.x - a.x) / d, z: (b.z - a.z) / d } : { x: 1, z: 0 };
       b.facing = { x: -a.facing.x + 0, z: -a.facing.z + 0 };
       for (const [q, other] of [[a, b], [b, a]] as const) {
         q.state = "chatting";

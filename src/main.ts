@@ -111,7 +111,11 @@ if (!view) {
   map.addEventListener("pointerup", endPointer);
   map.addEventListener("pointercancel", endPointer);
   for (const button of document.querySelectorAll<HTMLButtonElement>("[data-turn]")) {
-    button.addEventListener("click", () => apply({ kind: "turn", dir: button.dataset.turn === "left" ? -1 : 1 }));
+    button.addEventListener("click", () => {
+      apply({ kind: "turn", dir: button.dataset.turn === "left" ? -1 : 1 });
+      // Give the keys back to the map, so walking keeps working after a click on a turn button.
+      if (!build.isOpen()) map.focus({ preventScroll: true });
+    });
   }
 
   const build = installBuildMode({

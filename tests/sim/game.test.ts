@@ -280,3 +280,64 @@ describe("closing a dialogue with Back", () => {
     expect(g.command("closeDialogue")).toEqual({ ok: false, error: "No one is talking" });
   });
 });
+
+describe("final review fixes", () => {
+  const near = (g: ReturnType<typeof createGame>) => {
+    const p = g.world.people[0]!;
+    g.command("teleportPrincess", { x: p.x, z: p.z - 1 });
+    return p;
+  };
+
+  it("keeps a held direction through a dialogue, so she walks the moment it closes", () => {
+    const g = createGame(4);
+    near(g);
+    g.command("setWalkInput", { x: 1, z: 0 });
+    g.command("talk");
+    g.command("advance", { seconds: 1 });
+    const x = g.snapshot().princess.x;
+    g.command("advanceDialogue");
+    g.command("advance", { seconds: 0.5 });
+    expect(g.snapshot().princess.x).toBeGreaterThan(x + 0.5);
+  });
+
+  it("stopWalking drops a click-to-walk route and a pending talk", () => {
+    const g = createGame(4);
+    g.command("walkToPerson", { id: 3 });
+    expect(g.command("stopWalking")).toEqual({ ok: true });
+    expect(g.world.princess.route).toEqual([]);
+    expect(g.world.princess.talkTo).toBeNull();
+    const at = { ...g.snapshot().princess };
+    g.command("advance", { seconds: 2 });
+    expect(g.snapshot().princess).toEqual(at);
+  });
+
+  it("talking drops an earlier tap-to-walk", () => {
+    const g = createGame(4);
+    near(g);
+    expect(g.command("walkToPerson", { id: 5 }).ok).toBe(true);
+    expect(g.world.princess.route.length).toBeGreaterThan(0);
+    expect(g.command("talk")).toEqual({ ok: true });
+    expect(g.world.princess.route).toEqual([]);
+    expect(g.world.princess.talkTo).toBeNull();
+  });
+
+  it("won't teleport her into contact with a wall or the statue", () => {
+    const g = createGame(4);
+    expect(g.command("teleportPrincess", { x: 13.1, z: 10.5 })).toEqual({ ok: false, error: "That spot is blocked" });
+    expect(g.command("teleportPrincess", { x: 34, z: 20 })).toEqual({ ok: false, error: "That spot is blocked" });
+    expect(g.command("teleportPrincess", { x: 13.5, z: 10.5 }).ok).toBe(true);
+  });
+
+  it("stops pushing when a building lands across her route", () => {
+    const g = createGame(4);
+    g.command("teleportPrincess", { x: 15.5, z: 18.5 });
+    expect(g.command("walkTo", { x: 28, z: 18 }).ok).toBe(true);
+    g.command("advance", { seconds: 1 });
+    expect(g.command("placeBuilding", { type: "cottage", x: 22, z: 18, rot: 0 }).ok).toBe(true);
+    g.command("advance", { seconds: 10 });
+    const p = g.world.princess;
+    // She either walked round to the spot or gave up; she is never left pressing into the new wall.
+    const there = Math.hypot(p.x - 28.5, p.z - 18.5) < 0.2;
+    expect(there || p.route.length === 0, `at ${p.x},${p.z} with ${p.route.length} points left`).toBe(true);
+  });
+});

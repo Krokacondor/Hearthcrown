@@ -106,3 +106,45 @@ describe("people", () => {
     expect(JSON.stringify(a.world.people)).toBe(JSON.stringify(b.world.people));
   });
 });
+
+describe("people: final review fixes", () => {
+  it("gives the six citizens six different looks", () => {
+    for (let seed = 1; seed <= 50; seed++) {
+      const looks = createGame(seed).world.people.filter((p) => p.role === "citizen").map((p) => p.look);
+      expect(new Set(looks).size, `seed ${seed}`).toBe(6);
+    }
+  });
+
+  it("never walks through the statue, and rarely stands stacked on someone", () => {
+    for (const seed of [3, 11]) {
+      const { game, world, run } = setup(seed);
+      const s = game.town.map.statue;
+      let inStatue = 0, stacked = 0, samples = 0;
+      for (let t = 0; t < 300 * 10; t++) {
+        run(0.1);
+        samples++;
+        for (const p of world.people) if (Math.abs(p.x - s.x) < 0.35 && Math.abs(p.z - s.z) < 0.35) inStatue++;
+        const still = world.people.filter((p) => p.state !== "walking");
+        if (still.some((a, i) => still.some((b, j) => j > i && Math.hypot(a.x - b.x, a.z - b.z) < 0.1))) stacked++;
+      }
+      expect(inStatue, `seed ${seed}`).toBe(0);
+      expect(stacked / samples, `seed ${seed}`).toBeLessThan(0.01);
+    }
+  }, 60000);
+
+  it("sends anyone standing on a removed road back to the network, even mid-chat", () => {
+    const { game, world, run } = setup();
+    game.command("placeRoad", { x: 19, z: 17 });
+    const map = game.town.map;
+    const [a, b] = world.people as [World["people"][0], World["people"][0]];
+    const here = cellCenter(map, { cx: 3, cz: 7 });
+    Object.assign(a, { x: here.x - 0.4, z: here.z, state: "chatting", route: [], routeCells: [] });
+    Object.assign(b, { x: here.x + 0.4, z: here.z, state: "chatting", route: [], routeCells: [] });
+    a.chat = { partner: b.id, lines: ["Hi.", "Hi."], index: 0, firstSpeaker: a.id, timer: 3 };
+    b.chat = { partner: a.id, lines: ["Hi.", "Hi."], index: 0, firstSpeaker: a.id, timer: 3 };
+    expect(game.command("removeRoad", { x: 19, z: 17 }).ok).toBe(true);
+    run(3);
+    const W = walkableCells(game.town, world);
+    for (const p of [a, b]) expect(W.has(cellKey(cellOf(map, Math.floor(p.x), Math.floor(p.z)))), p.name).toBe(true);
+  });
+});
