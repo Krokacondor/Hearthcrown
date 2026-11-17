@@ -90,7 +90,7 @@
 - **Render**: paper placeholder people (code SVG by art ID: `figure.*`, `portrait.*`) facing the camera with ground shadows, hover easing, an ink-edged talk marker kept about 14px on screen, wide invisible tap cards. The camera follows the princess; phones held sideways start closer (zoom 0.8, desktop 1.4).
 - **Dialogue box and chat bubbles** (brief: `docs/design/dialogue-brief.md`), recorded in DESIGN.md.
 - PLAN.md updated: road grid, scale, princess movement, wings later, controller, homes and family rule, Cottage-only start, three cottages in the opening, the advisor, M2/M2b split, map editor moved to M15.
-- 290 unit tests.
+- 298 unit tests.
 
 **Browser check (Playwright, dev server)**
 - No console errors or warnings at 1280×800 or 844×390.
@@ -99,6 +99,7 @@
 - Built a Cottage, a Family Home and a Manor from the keyboard: housed 6 (2 in the cottage, 4 in the Family Home). A 2×2 road piece from the keyboard adds one cell; painting with Enter held lays a joined 2-wide road.
 - Talking: the box shows name, portrait and line at both sizes, each line is announced, the second press closes it, Esc closes it, B does nothing while talking. Chats show words close up and dots farther away.
 - Impeccable critique 22/40 (dual-agent), all 5 priority issues fixed; detector clean on the new UI.
+- Final whole-branch code review: 8 important findings, all fixed with tests (walk keys survive a talk, Build stops a click-to-walk, six distinct citizen looks, no stacking or walking through the statue, no stuck princess after a teleport or a building across her route, keys work after the turn buttons), plus two promoted minors (people on a removed road head back even mid-chat; talking drops an earlier tap-to-walk).
 
 **Choices made** (details in the M2 ledger)
 - Click-to-walk routes avoid the squares under the statue and quest board. The dialogue box flips to the top only below 70% of the view. Advisor name "Bertram".
@@ -110,5 +111,6 @@
 - "Someone is in reach" and overheard chats aren't announced to screen readers; a failed talk is silent.
 - Placeholder figures always show their front (back views and the paper flip are M2b); their ink reads thin at the default zoom.
 - The town size is unchanged (revisit now that walking exists). The clock doesn't run yet (M3).
+- From the final code review (deferred): walkers can stand on the outer half of a gate; no smoothing between 60 Hz ticks on high-refresh screens; the statue/board collision sizes and tap thresholds are constants in code rather than data; the princess can block a tap on a person standing behind her; the click-to-walk route search is a simple linear scan; the westward forecourt lane grazes the quest board.
 
 **Next:** M2b, Paper people.
